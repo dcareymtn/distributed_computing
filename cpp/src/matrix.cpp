@@ -16,10 +16,12 @@ Matrix::Matrix( const int rows, const int cols ) :
 
 void Matrix::write( FILE * os )
 {
-    printf( "nrows = %d\n\n", rows);
-    for (int iRow = 0; iRow++; iRow < rows)
+    printf( "nrows = %d\n", rows);
+    printf( "ncols = %d\n", cols);
+
+    for (int iRow = 0; iRow < rows; iRow++ )
     {
-        for (int iCol = 0; iCol++; iCol < cols)
+        for (int iCol = 0; iCol < cols; iCol++ )
         {
             printf("%2.0f ", M[iRow][iCol]);
         }
