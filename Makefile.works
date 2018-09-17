@@ -58,6 +58,7 @@ dirs:
 .PHONY: clean
 clean:
 	@echo "Deleting $(BIN_NAME) symlink"
+	@$(RM) $(BIN_NAME)
 	@echo "Deleting directories"
 	@$(RM) -r $(BUILD_PATH)
 	@$(RM) -r $(BIN_PATH)
@@ -65,23 +66,43 @@ clean:
 
 # Checks the executable and symlinks to the output
 .PHONY: all
-all: $(BINOBJECTS)
+all: homework1 homework2
+
+.PHONE: dumb
+dumb:
+	@echo "MAINSOURCES ARE: $(MAINSOURCES)"
+	@echo "MAINOBJECTS ARE: $(MAINOBJECTS)"
+	@echo "BINOJBECTS ARE:  $(BINOBJECTS)"
+
+.PHONY: exec
+exec: $(BINOBJECTS)
+	@echo "hello"
 	@echo "$(BINOBJECTS)"
+
+# Creation of the executable
+.PHONY: homework1
+homework1: dirs $(OBJECTS)
+	$(CXX) $(LIBOBJECTS) $(BUILD_MAIN_PATH)/$@.o -o $@
+
+# Creation of the executable
+.PHONY: homework2
+homework2: dirs $(OBJECTS)
+	$(CXX) $(LIBOBJECTS) $(BUILD_MAIN_PATH)/$@.o -o $@
 
 # Add dependency files, if they exist
 -include $(DEPS)
 
 # Source file rules
+# AFter the first compilation they will be joined with the rules from the
+# dependency files to provide header dependencies
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 
-# Source file rules for the main objects
 $(BUILD_MAIN_PATH)/%.o: $(MAIN_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 
-# Rule to make the main binary files
 $(BIN_PATH)/%: dirs $(OBJECTS) $(MAIN_PATH)/%.$(SRC_EXT) 
 	@echo "In HERE $@"
 	@echo "$(CXX) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@"
