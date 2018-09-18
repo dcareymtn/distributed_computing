@@ -43,7 +43,7 @@ LIBS =
 default_target: release
 
 .PHONY: release
-release: export CXXLAFS := $(CXXFLAGS) $(COMPILE_FLAGS)
+release: export CXXFLAGS := $(CXXFLAGS) $(CFLAGS)
 release: dirs
 	@$(MAKE) all
 
@@ -83,6 +83,4 @@ $(BUILD_MAIN_PATH)/%.o: $(MAIN_PATH)/%.$(SRC_EXT)
 
 # Rule to make the main binary files
 $(BIN_PATH)/%: dirs $(OBJECTS) $(MAIN_PATH)/%.$(SRC_EXT) 
-	@echo "In HERE $@"
-	@echo "$(CXX) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@"
 	$(CXX) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@

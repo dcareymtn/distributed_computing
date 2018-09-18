@@ -29,3 +29,39 @@ void Matrix::write( FILE * os )
     }
 
 }
+
+Matrix Matrix::eye( int n )
+{
+    Matrix new_mat = Matrix( n, n );
+
+    for (int r = 0; r < n; r++)
+    {
+        new_mat[r][r] = 1.0;
+    }
+    
+    new_mat.write( stdout );
+
+    return new_mat;
+}
+
+Matrix Matrix::randi( int rows, int cols, int low_int, int high_int )
+{
+    Matrix new_mat = Matrix( rows, cols );
+
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            new_mat[r][c]   = -1 +low_int + (rand() % (high_int - low_int + 1) + 1);
+        }
+    }
+
+    new_mat.write( stdout );
+
+    return new_mat;
+}
+
+vector<double>& Matrix::operator[](int row)
+{
+    return M[row];
+}
