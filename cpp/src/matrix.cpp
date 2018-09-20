@@ -14,20 +14,30 @@ Matrix::Matrix( const int rows, const int cols ) :
 {
 }
 
+int Matrix::getRows( void ) const
+{
+    return this->rows;
+}
+
+int Matrix::getCols( void ) const
+{
+    return this->cols;
+}
+
 void Matrix::write( FILE * os )
 {
-    printf( "nrows = %d\n", rows);
-    printf( "ncols = %d\n", cols);
+    fprintf(os, "nrows = %d\n", rows);
+    fprintf(os, "ncols = %d\n", cols);
 
     for (int iRow = 0; iRow < rows; iRow++ )
     {
         for (int iCol = 0; iCol < cols; iCol++ )
         {
-            printf("%2.0f ", M[iRow][iCol]);
+            fprintf(os, "%5.1f ", M[iRow][iCol]);
         }
-        printf("\n");
+        fprintf(os, "\n");
     }
-
+    fprintf(os, "\n");
 }
 
 Matrix Matrix::eye( int n )
@@ -39,8 +49,6 @@ Matrix Matrix::eye( int n )
         new_mat[r][r] = 1.0;
     }
     
-    new_mat.write( stdout );
-
     return new_mat;
 }
 
@@ -56,12 +64,53 @@ Matrix Matrix::randi( int rows, int cols, int low_int, int high_int )
         }
     }
 
-    new_mat.write( stdout );
-
     return new_mat;
 }
 
 vector<double>& Matrix::operator[](int row)
 {
     return M[row];
+}
+vector<double> Matrix::operator[](int row) const
+{
+    return M[row];
+}
+
+Matrix Matrix::getSubMatrix( int start_row, int stop_row, int start_col, int stop_col ) const
+{
+    int nRow = stop_row - start_row + 1;
+    int nCol = stop_col - start_col + 1;
+    
+    Matrix newMat( nRow, nCol );
+
+    for (int iRow = 0; iRow < nRow; iRow++)
+    {   
+        for (int iCol = 0; iCol < nCol; iCol++)
+        {
+            newMat[iRow][iCol] = this->M[start_row + iRow][start_col + iCol];
+        }
+    }
+
+    return newMat;
+}
+
+std::vector<std::vector<Matrix> > Matrix::parBreak( int nRowBreak ) const
+{
+    std::vector<std::vector<Matrix> > Mpar(nRowBreak, std::vector<Matrix> (1));
+
+    if (this->rows%nRowBreak != 0)
+    {
+        fprintf(stderr, "%d is Not-divisible by %d\n", this->rows, nRowBreak);
+        exit(0);
+    }
+    
+    int newRowSize = this->rows / nRowBreak;
+
+    for (int iPar = 0; iPar<nRowBreak; iPar++)
+    {
+        Mpar[iPar][0] = this->getSubMatrix(iPar*newRowSize, (iPar+1)*newRowSize-1, 0, this->cols);
+    }
+
+    return Mpar;    
+    
 }

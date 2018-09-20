@@ -33,7 +33,8 @@ OBJECTS=$(LIBOBJECTS) $(MAINOBJECTS)
 DEPS = $(OBJECTS:.o=.d)
 
 # flags "
-CFLAGS = -std=c++11 -Wall -Wextra -g
+#CFLAGS = -std=c++11 -Wall -Wextra -g
+CFLAGS = -std=c++11 -g
 INCLUDES = -I inc/ -I /usr/local/include -I $(INC_PATH)
 
 # Space-separated pkg-config libraries used by this project
