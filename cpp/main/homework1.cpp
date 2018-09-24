@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <ctime>
+#include <omp.h>
 
 #include "matrix.h"
 #include "algo.h"
@@ -23,27 +23,34 @@ void problem1()
 
     printVectorTableCSV( pFile, counter, 0, 31);
 
-    Matrix T = Matrix::randi(128,128,1,8);
-    std::vector<std::vector< Matrix > > P = T.parBreak( 4 );
-
     printf("======================================\n");
     printf("Starting Small Experiment\n");
     printf("======================================\n");
+
+    int start_int(1), stop_int(31);
+    int nPar = 32;
+    int counter_size = 256;
+    int filter_size = 3;
+    double start_s, stop_s;
+    Matrix T = Matrix::randi(counter_size, counter_size, start_int, stop_int);
+
+
+    printf("\nParallel: %d\n", nPar);
 
     printf("\n\nExperiment 1) Counter:\n\n");
 
     printf("\nInput Matrix:\\n\n");
     T.write(stdout);
 
-    int start_s = clock();
-    std::vector<int> Tcount     = count_occurrences( T, 1, 8);
-    int stop_s = clock();
-    double time_count_serial = (stop_s - start_s)/double(CLOCKS_PER_SEC)*1000;
+    start_s = omp_get_wtime();
+    std::vector<int> Tcount     = count_occurrences( T, start_int, stop_int);
+    stop_s = omp_get_wtime();
+    double time_count_serial = (stop_s - start_s);
     
-    start_s = clock();
-    std::vector<int> TcountPar  = count_occurrences_par( T, 1, 8, 4 );
-    stop_s = clock();
-    double time_count_par   = (stop_s - start_s)/double(CLOCKS_PER_SEC)*1000;
+    start_s = omp_get_wtime();
+    std::vector<int> TcountPar  = count_occurrences_par( T, start_int, stop_int, nPar );
+    stop_s = omp_get_wtime();
+    double time_count_par   = (stop_s - start_s);
 
     printf("Serial: %3.5f seconds\n\n", time_count_serial);
     printVectorTableCSV( stdout, Tcount, 1, 8);
@@ -56,17 +63,19 @@ void problem1()
     printf("Input:\n");
     T.write(stdout);
     printf("Serial:\n");
-    start_s     = clock();
-    RMS_filter2(T, 3, 3).write(stdout);
-    stop_s  = clock();
-    double time_rms_serial = (stop_s - start_s)/double(CLOCKS_PER_SEC)*1000;
+    start_s     = omp_get_wtime();
+    Matrix filter_series = RMS_filter2(T, filter_size, filter_size);
+    stop_s  = omp_get_wtime();
+    filter_series.write(stdout);
+    double time_rms_serial = (stop_s - start_s);
 
     printf("Parallel:\n");
 
-    start_s = clock();
-    RMS_filter2_par( T, 2, 3, 3).write(stdout);
-    stop_s = clock();
-    double time_rms_par = (stop_s - start_s)/double(CLOCKS_PER_SEC)*1000;
+    start_s = omp_get_wtime();
+    Matrix filter_par = RMS_filter2_par( T, nPar, filter_size, filter_size);
+    stop_s = omp_get_wtime();
+    filter_par.write(stdout);
+    double time_rms_par = (stop_s - start_s);
 
 
     printf("Counter Serial : %3.5f seconds\n", time_count_serial);

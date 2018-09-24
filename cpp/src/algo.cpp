@@ -39,6 +39,8 @@ std::vector<int> count (num_int, 0);
 std::vector<std::vector<int> > count_par(nPar, std::vector<int> (num_int, 0)); 
 
 std::vector<std::vector<Matrix> > PMat = mat.parBreak( nPar );
+
+    #pragma omp parallel for
     for (int iPar = 0; iPar < nPar; iPar++)
     {
         count_par[iPar] = count_occurrences( PMat[iPar][0], start_count, stop_count ); 
@@ -99,6 +101,8 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
     int sub_col_size = M.getCols();
 
     int new_row, new_col;
+
+    #pragma omp parallel for
     for (int iPar = 0; iPar < nPar; iPar++)
     {
         temp = RMS_filter2( PMat[iPar][0], filtNRows, filtNCols);

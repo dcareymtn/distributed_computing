@@ -34,7 +34,7 @@ DEPS = $(OBJECTS:.o=.d)
 
 # flags "
 #CFLAGS = -std=c++11 -Wall -Wextra -g
-CFLAGS = -std=c++11 -g
+CFLAGS = -std=c++11 -g -fopenmp
 INCLUDES = -I inc/ -I /usr/local/include -I $(INC_PATH)
 
 # Space-separated pkg-config libraries used by this project
@@ -84,4 +84,4 @@ $(BUILD_MAIN_PATH)/%.o: $(MAIN_PATH)/%.$(SRC_EXT)
 
 # Rule to make the main binary files
 $(BIN_PATH)/%: dirs $(OBJECTS) $(MAIN_PATH)/%.$(SRC_EXT) 
-	$(CXX) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@
+	$(CXX) $(CXXFLAGS) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@
