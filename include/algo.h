@@ -10,4 +10,6 @@ std::vector<int> count_occurrences_par( const Matrix & mat, int start_count, int
 
 Matrix RMS_filter2( const Matrix & M, int filtNRows, int filtNCols );
 
+Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols );
+
 #endif

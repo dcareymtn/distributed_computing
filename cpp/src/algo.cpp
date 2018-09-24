@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <omp.h>
+#include <vector>
+#include <math.h>
 
 #include "algo.h"
 #include "matrix.h"
-#include <vector>
-#include <math.h>
+
 
 std::vector<int> count_occurrences( const Matrix & mat, int start_count, int stop_count )
 {
@@ -83,4 +85,35 @@ Matrix RMS_filter2( const Matrix & M, int filtNRows, int filtNCols )
     }
     
     return filtM;
+}
+
+Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols )
+{
+    Matrix filtM( M.getRows(), M.getCols() );
+
+    std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, filtNCols );
+
+    Matrix temp;
+    
+    int sub_row_size = M.getRows()/nPar;
+    int sub_col_size = M.getCols();
+
+    int new_row, new_col;
+    for (int iPar = 0; iPar < nPar; iPar++)
+    {
+        temp = RMS_filter2( PMat[iPar][0], filtNRows, filtNCols);
+       
+        // temp.write(stdout);
+
+        for (int iRow = 0; iRow < sub_row_size; iRow++)
+        {
+            for (int iCol = 0; iCol < sub_col_size; iCol++)
+            {
+                new_row = iRow + (filtNRows-1)/2;
+                new_col = iCol + (filtNCols-1)/2;
+                filtM[iPar*sub_row_size + iRow][iCol] = temp[new_row][new_col];
+            }
+        }
+    }
+return filtM;
 }
