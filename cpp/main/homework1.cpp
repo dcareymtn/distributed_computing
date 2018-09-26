@@ -28,13 +28,15 @@ void problem1()
     printf("======================================\n");
 
     int start_int(1), stop_int(31);
-    int nPar = 2;
+    int nPar = 32;
     int counter_size = 128;
     int filter_size = 3;
     double start_s, stop_s;
     Matrix T = Matrix::randi(counter_size, counter_size, start_int, stop_int);
 
-    printf("\n\nExperiment 1) Counter:\n\n");
+    printf("\nUsing %d Processors:\n\n", nPar);
+    
+    printf("Experiment 1) Counter:\n\n");
 
     //printf("\nInput Matrix:\\n\n");
     //T.write(stdout);
@@ -71,14 +73,15 @@ void problem1()
 
     printf("RMS Series took: %3.5f seconds\n", time_rms_serial);
 
-    printf("Parallel:\n");
-
     start_s = omp_get_wtime();
     Matrix filter_par = RMS_filter2_par( T, nPar, filter_size, filter_size);
     stop_s = omp_get_wtime();
     //filter_par.write(stdout);
     double time_rms_par = (stop_s - start_s);
 
+    printf("RMS Parall took: %3.5f seconds\n\n", time_rms_par);
+
+    printf("Results\n\n");
 
     printf("Counter Serial : %3.5f seconds\n", time_count_serial);
     printf("Counter Parall : %3.5f seconds\n\n", time_count_par);

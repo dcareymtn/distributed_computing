@@ -95,8 +95,6 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
 
     std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, filtNCols );
 
-    Matrix temp;
-    
     int sub_row_size = M.getRows()/nPar;
     int sub_col_size = M.getCols();
 
@@ -105,10 +103,8 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
     #pragma omp parallel for
     for (int iPar = 0; iPar < nPar; iPar++)
     {
-        temp = RMS_filter2( PMat[iPar][0], filtNRows, filtNCols);
+        Matrix temp = RMS_filter2( PMat[iPar][0], filtNRows, filtNCols);
        
-        // temp.write(stdout);
-
         for (int iRow = 0; iRow < sub_row_size; iRow++)
         {
             for (int iCol = 0; iCol < sub_col_size; iCol++)
