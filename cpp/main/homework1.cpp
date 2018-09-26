@@ -28,66 +28,51 @@ void problem1()
     printf("======================================\n");
 
     int start_int(1), stop_int(31);
-    int nPar = 32;
+    std::vector<int> nPar = {1,1,2,4,8,16,32};
     int counter_size = 128;
+    int image_size  = 128;
     int filter_size = 3;
     double start_s, stop_s;
+    std::vector<double> counter_time, rms_filter_time;
+
     Matrix T = Matrix::randi(counter_size, counter_size, start_int, stop_int);
+    Matrix I = Matrix::randi(image_size, image_size, start_int, stop_int);
 
-    printf("\nUsing %d Processors:\n\n", nPar);
-    
     printf("Experiment 1) Counter:\n\n");
-
-    //printf("\nInput Matrix:\\n\n");
-    //T.write(stdout);
 
     start_s = omp_get_wtime();
     std::vector<int> Tcount     = count_occurrences( T, start_int, stop_int);
     stop_s = omp_get_wtime();
-    double time_count_serial = (stop_s - start_s);
-    
-    printf("Serial: %3.5f seconds\n", time_count_serial);
+    counter_time.push_back(stop_s - start_s);
+    for (int iPar = 1; iPar < nPar.size(); iPar++)
+    {
+        start_s = omp_get_wtime();
+        std::vector<int> TcountPar  = count_occurrences_par( T, start_int, stop_int, nPar[iPar]);
+        stop_s = omp_get_wtime();
+        counter_time.push_back(stop_s - start_s);
+    }
 
-    start_s = omp_get_wtime();
-    std::vector<int> TcountPar  = count_occurrences_par( T, start_int, stop_int, nPar );
-    stop_s = omp_get_wtime();
-    double time_count_par   = (stop_s - start_s);
-
-    printf("Paralellel: %3.5f seconds\n\n", time_count_par);
-
-    //printVectorTableCSV( stdout, Tcount, 1, 8);
-    
-
-    //printVectorTableCSV( stdout, TcountPar, 1, 8);
+    printf("Counter Results\n\n");
+    printVectorTableCSV( stdout, nPar, counter_time );
 
     printf("\n\nExperiment 2) RMS Filter\n\n");
 
-    //printf("Input:\n");
-    //T.write(stdout);
-    //printf("Serial:\n");
     start_s     = omp_get_wtime();
-    Matrix filter_series = RMS_filter2(T, filter_size, filter_size);
+    Matrix filter_series = RMS_filter2(I, filter_size, filter_size);
     stop_s  = omp_get_wtime();
-    //filter_series.write(stdout);
-    double time_rms_serial = (stop_s - start_s);
+    rms_filter_time.push_back(stop_s - start_s);
 
-    printf("RMS Series took: %3.5f seconds\n", time_rms_serial);
+    for (int iPar = 1; iPar < nPar.size(); iPar++)
+    {
+        start_s = omp_get_wtime();
+        Matrix filter_par = RMS_filter2_par( I, nPar[iPar], filter_size, filter_size);
+        stop_s = omp_get_wtime();
+        rms_filter_time.push_back(stop_s - start_s);
+    }
 
-    start_s = omp_get_wtime();
-    Matrix filter_par = RMS_filter2_par( T, nPar, filter_size, filter_size);
-    stop_s = omp_get_wtime();
-    //filter_par.write(stdout);
-    double time_rms_par = (stop_s - start_s);
-
-    printf("RMS Parall took: %3.5f seconds\n\n", time_rms_par);
-
-    printf("Results\n\n");
-
-    printf("Counter Serial : %3.5f seconds\n", time_count_serial);
-    printf("Counter Parall : %3.5f seconds\n\n", time_count_par);
-    printf("RMS Series took: %3.5f seconds\n", time_rms_serial);
-    printf("RMS Parall took: %3.5f seconds\n", time_rms_par);
-
+    printf("RMS Filter Results\n\n");
+    printVectorTableCSV( stdout, nPar, rms_filter_time );
+    
 }
 
 int main(int argc, char **argv)

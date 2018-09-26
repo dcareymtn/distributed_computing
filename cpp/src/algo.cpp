@@ -40,6 +40,8 @@ std::vector<std::vector<int> > count_par(nPar, std::vector<int> (num_int, 0));
 
 std::vector<std::vector<Matrix> > PMat = mat.parBreak( nPar );
 
+    omp_set_num_threads(nPar);
+
     #pragma omp parallel for
     for (int iPar = 0; iPar < nPar; iPar++)
     {
