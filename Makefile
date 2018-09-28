@@ -1,5 +1,6 @@
 # Define required macros here
-CXX ?= g++
+# CXX ?= g++
+CXX = mpiCC
 
 #PATHS
 SRC_PATH=cpp/src
