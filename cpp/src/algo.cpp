@@ -182,3 +182,76 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
     }
 return filtM;
 }
+
+Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtNCols )
+{
+    int rank, size;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 0)
+    {
+        Matrix filtM( M.getRows(), M.getCols() );
+        std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, filtNCols);
+        
+        int sub_row_size = M.getRows()/size;
+        int sub_col_size = M.getCols();
+
+        int new_row, new_col;
+
+        int num_rows = PMat[0][0].getRows();
+        int num_cols = PMat[0][0].getCols();
+        
+        // Send some processes to the helpers
+        for (int iPar = 1; iPar < size; iPar++)
+        {
+
+            MPI_Send( &num_rows, 1, MPI_INT, iPar, 0, MPI_COMM_WORLD);
+            MPI_Send( &num_cols, 1, MPI_INT, iPar, 0, MPI_COMM_WORLD);
+
+            PMat[iPar][0].sendMPI(iPar, 0, MPI_COMM_WORLD);
+        
+        }
+
+        std::vector<Matrix> temp_vecMat(nPar, PMat[0][0]);
+        
+        temp_vecMat[0] = RMS_filter2( PMat[0][0], filtNRows, filtNCols);
+
+        for (int iPar = 1; iPar < size; iPar++)
+        {
+            temp_vecMat[iPar].recvMPI( num_rows, num_cols, iPar, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+   
+        for (int iPar = 0; iPar < nPar; iPar++)
+        {
+            for (int iRow = 0; iRow < sub_row_size; iRow++)
+            {
+                for (int iCol = 0; iCol < sub_col_size; iCol++)
+                {
+                    new_row = iRow + (filtNRows-1)/2;
+                    new_col = iCol + (filtNCols-1)/2;
+                    filtM[iPar*sub_row_size + iRow][iCol] = temp_vecMat[iPar][new_row][new_col];
+                }
+            }
+        }
+
+        return filtM;
+    }
+    else
+    {
+        int num_rows, num_cols;
+        Matrix recvMatrix;
+        MPI_Recv( &num_rows, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv( &num_cols, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        recvMatrix.recvMPI( num_rows, num_cols, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        Matrix temp = RMS_filter2( recvMatrix, filtNRows, filtNCols);
+
+        temp.sendMPI( 0, 0, MPI_COMM_WORLD );
+
+    }
+
+    return Matrix(2,2);
+}

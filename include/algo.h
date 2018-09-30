@@ -14,4 +14,6 @@ Matrix RMS_filter2( const Matrix & M, int filtNRows, int filtNCols );
 
 Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols );
 
+Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtNCols );
+
 #endif

@@ -22,26 +22,7 @@ void problem1()
 
         printf("Working Problem 1:\n");
 
-        // Generate a matrix of size 128 x 128
-        Matrix M = Matrix::randi(8, 8, 0, 5);
-        std::vector<int> counter = count_occurrences( M, 0, 5);
-        //std::vector<int> counter_mpi = count_occurrences_par_mpi( M, 0, 5, 2222
-        M.write(stdout);
-        printVectorTableCSV( stdout, counter, 0, 5 );
-        // printVectorTableCSV( stdout, counter_mpi, 0, 5);
 
-        int count =0;
-        for (int ii = 0; ii < counter.size(); ii++)
-        {
-            count += counter[ii];
-        }
-        FILE * pFile = fopen("result.txt", "w");
-
-        printVectorTableCSV( pFile, counter, 0, 31);
-
-        printf("======================================\n");
-        printf("Starting Small Experiment\n");
-        printf("======================================\n");
 
         std::vector<int> nPar = {1,1,2,4,8,16,32};
 
@@ -102,16 +83,27 @@ void problem1()
         
         MPI_Recv( &done, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         stop_s  = omp_get_wtime();
-        printVectorTableCSV( stdout, TcountParMPI, start_int, stop_int);
+        
+        FILE * pFile = fopen("result.txt", "w");
+        printVectorTableCSV( pFile, TcountParMPI, start_int, stop_int);
 
-        printf("MPI Took: %3.3f sec\n", stop_s - start_s);
+        printf("MPI Running with %d cores\n", size);
+        printf("MPI Occurrence Counting Took: %3.3f sec\n", stop_s - start_s);
     }
     else
     {
         std::vector<int> TcountParMPI = count_occurrences_par_mpi( T, start_int, stop_int, size);
         MPI_Send( &done, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
-    
+
+    double start_s = omp_get_wtime();
+    Matrix filtM_MPI = RMS_filter2_par_mpi( T, size, 3, 3 );
+
+    if (rank == 0)
+    {
+        double stop_s = omp_get_wtime();
+        printf("MPI RMS Filtering Took: %3.3f sec\n", stop_s - start_s);
+    }
 // printVectorTableCSV( stdout, TcountParMPI, start_int, stop_int); 
         
 }
