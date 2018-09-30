@@ -11,7 +11,7 @@ class Matrix
     public:
     Matrix( void );
     Matrix( const int rows, const int cols );
-    void write( FILE * os );
+    void write( FILE * os ) const;
     vector<double>& operator[](int row);
     vector<double> operator[](int row) const;
 
@@ -23,6 +23,8 @@ class Matrix
     
     std::vector<std::vector<Matrix> > parBreak(int nRowBreak ) const;
     std::vector<std::vector<Matrix> > parBreakZeroPadForFilt( int nRowBreak, int filtNRows, int FiltNCols ) const;
+    void sendMPI( const int proc, const int tag, const MPI_Comm comm) const;
+    void recvMPI( const int num_rows, const int num_cols, const int from_proc, const int tag, const MPI_Comm comm, MPI_Status *status);
 
     static Matrix zeros( const int rows, const int cols );
     static Matrix eye(int n);

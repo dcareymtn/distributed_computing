@@ -1,3 +1,5 @@
+#include <mpi.h>
+
 #include "matrix.h"
 #include "matrix.h"
 
@@ -24,7 +26,7 @@ int Matrix::getCols( void ) const
     return this->cols;
 }
 
-void Matrix::write( FILE * os )
+void Matrix::write( FILE * os ) const
 {
     fprintf(os, "nrows = %d\n", rows);
     fprintf(os, "ncols = %d\n", cols);
@@ -150,6 +152,28 @@ std::vector<std::vector< Matrix> > Matrix::parBreakZeroPadForFilt( int nRowBreak
     }
 
     return Mpar;
+}
+
+void Matrix::sendMPI( const int proc, const int tag, const MPI_Comm comm) const
+{
+    for (int iRow = 0; iRow < rows; iRow++)
+    {
+        MPI_Send( &M[iRow][0], cols, MPI_DOUBLE, proc, tag, comm);
+    }
+}
+
+void Matrix::recvMPI( const int num_rows, const int num_cols, const int from_proc, const int tag, const MPI_Comm comm, MPI_Status *status)
+{
+
+    rows = num_rows;
+    cols = num_cols;
+
+    M.resize( num_rows, std::vector<double>( num_cols, 0)); 
+
+    for (int iRow = 0; iRow < rows; iRow++)
+    {   
+        MPI_Recv( &M[iRow][0], cols, MPI_DOUBLE, from_proc, tag, comm, status);
+    }  
 }
 
 Matrix Matrix::zeros( int rows, int cols )

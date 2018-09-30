@@ -2,6 +2,7 @@
 #include <omp.h>
 #include <vector>
 #include <math.h>
+#include <mpi.h>
 
 #include "algo.h"
 #include "matrix.h"
@@ -57,6 +58,68 @@ std::vector<std::vector<Matrix> > PMat = mat.parBreak( nPar );
     }
 
     return count;
+
+}
+
+
+std::vector<int> count_occurrences_par_mpi( const Matrix & mat, int start_count, int stop_count, int nPar )
+{
+    int num_int = (stop_count - start_count + 1);
+    std::vector<int> count (num_int, 0);
+
+    std::vector<std::vector<int> > count_par(nPar, std::vector<int> (num_int, 0)); 
+
+    std::vector<std::vector<Matrix> > PMat = mat.parBreak( nPar );
+
+    int rank, size;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    Matrix recvMatrix(mat.getRows(), mat.getCols());
+    int testint;
+    if (rank == 0)
+    {   
+        for (int iPar = 1; iPar < size; iPar++)
+        {
+            //mat.sendMPI(iPar, 0, MPI_COMM_WORLD);
+            PMat[iPar][0].sendMPI(iPar, 0, MPI_COMM_WORLD);
+        }
+
+        // Process some of the data on the main thread
+        count_par[0] = count_occurrences( PMat[0][0], start_count, stop_count ); 
+
+        // Receive the processed data on the parallel threads
+        for (int iPar = 1; iPar < size; iPar++)
+        {
+            MPI_Recv( &count_par[iPar][0], num_int, MPI_INT, iPar, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+
+        // Combine the results
+        for (int iInt = 0; iInt < num_int; iInt++)
+        {
+            for (int iPar = 0; iPar < nPar; iPar++)
+            {
+                count[iInt] = count[iInt] + count_par[iPar][iInt];
+            }
+        }
+
+        return count;
+
+    }
+    else
+    {
+        // Receive the sub matrix on the parallel thread
+        recvMatrix.recvMPI( PMat[rank][0].getRows(), PMat[0][0].getCols(), 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        
+        // Count the sub matrix on this parallel thread
+        std::vector<int> par_count = count_occurrences( recvMatrix, start_count, stop_count);
+
+        MPI_Send( &par_count[0], par_count.size(), MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+    }
+
+    // return count;
 
 }
 
