@@ -102,6 +102,7 @@ void problem1()
         
         MPI_Recv( &done, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         stop_s  = omp_get_wtime();
+        printVectorTableCSV( stdout, TcountParMPI, start_int, stop_int);
 
         printf("MPI Took: %3.3f sec\n", stop_s - start_s);
     }
