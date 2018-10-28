@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
+#include "test.h"
 
-__global__ void print(char *a, int N)
+__global__ void print_cuda(char *a, int N)
 {
     char p[11]="Hello CUDA";
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -13,7 +14,7 @@ __global__ void print(char *a, int N)
     }
 }
 
-int main(void)
+void hello_cuda(void)
 {
     char *a_h, *a_d; // _h for the host and _d for the device based pointers
     const int N = 11;
@@ -34,7 +35,7 @@ int main(void)
     int blocksize = 4;
     int nblock = N/blocksize + (N%blocksize == 0 ? 0 : 1);
 
-    print <<< nblock, blocksize >>>(a_d, N); // Run the kernel on the device
+    print_cuda <<< nblock, blocksize >>>(a_d, N); // Run the kernel on the device
 
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)

@@ -49,11 +49,13 @@ DEPS = $(OBJECTS:.o=.d)
 
 # flags "
 #CFLAGS = -std=c++11 -Wall -Wextra -g
-CFLAGS = -std=c++11 -g -fopenmp
+#CFLAGS = -std=c++11 -g -fopenmp
+CFLAGS = -std=c++0x -g -fopenmp
+#CFLAGS = -g -fopenmp
 INCLUDES = -I inc/ -I /usr/local/include -I $(INC_PATH)
 
 # Space-separated pkg-config libraries used by this project
-LIBS = 
+LIBS = -lcuda -lcudart
 
 .PHONY: default_target
 default_target: release
@@ -95,24 +97,24 @@ all: $(BINOBJECTS)
 # Source file rules
 $(BUILD_PATH)/%.o: $(CPP_SRC_PATH)/%.$(CPP_SRC_EXT)
 	@echo "Compiling: $< -> $@"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(LIBS) $(INCLUDES) -MP -MMD -c $< -o $@
 
 # Source file rules for the main objects
 $(BUILD_MAIN_PATH)/%.o: $(CPP_MAIN_PATH)/%.$(CPP_SRC_EXT)
 	@echo "Compiling Main: $< -> $@"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(LIBS) $(INCLUDES) -MP -MMD -c $< -o $@
 
 $(BUILD_CU_PATH)/%.o: $(CU_SRC_PATH)/%.$(CU_SRC_EXT)
 	@echo "Compiling Cuda Main: $< -> $@"
-	$(CU) -c $< -o $@
+	$(CU) $(INCLUDES) $(LIBS) -c $< -o $@
 
 $(BUILD_MAIN_CU_PATH)/%.o: $(CU_MAIN_PATH)/%.$(CU_SRC_EXT)
-	@echo "Compiling Cuda: $< -> $@"
-	$(CU) -c $< -o $@
+	@echo "Compiling Cuda Object: $< -> $@"
+	$(CU) $(INCLUDES) $(LIBS) -c $< -o $@
 
 # Rule to make the main binary files
 $(BIN_PATH)/%: dirs $(OBJECTS) $(CPP_MAIN_PATH)/%.$(CPP_SRC_EXT) 
-	$(CXX) $(CXXFLAGS) $(LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@
+	$(CXX) $(CXXFLAGS) $(LIBS) $(LIBOBJECTS) $(CU_LIBOBJECTS) $(subst $(BIN_PATH),$(BUILD_MAIN_PATH),$@.o) -o $@
 
 $(BIN_CU_PATH)/%: dirs $(OBJECTS) $(CU_MAIN_PATH)/%.$(CU_SRC_EXT)
-	$(CXX) $(CXXFLAGS) $(LIBOBJECTS) $(subst $(BIN_CU_PATH),$(BUILD_MAIN_CU_PATH),$@.o) -o $@
+	$(CXX) $(CXXFLAGS) $(LIBS) $(LIBOBJECTS) $(CU_LIBOBJECTS) $(subst $(BIN_CU_PATH),$(BUILD_MAIN_CU_PATH),$@.o) -o $@
