@@ -6,6 +6,7 @@
 #BSUB -J hello_world # job name
 #BSUB -R gpu
 
+rm ~/workspace/distributed_computing/scripts/lsf*
 module load cuda
 module load openmpi 
 time ~/workspace/distributed_computing/buildcu/bin/testmain

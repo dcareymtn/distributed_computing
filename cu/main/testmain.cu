@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
-#include "test.h"
+#include "gpu_algo.h"
 
 int main(void)
 {
 	printf("Hello Cpp\n");
-	hello_cuda();
+	gpu::hello_cuda();
 }

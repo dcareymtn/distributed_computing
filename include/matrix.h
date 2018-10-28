@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <mpi.h>
 
 using namespace std;
 

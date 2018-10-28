@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
+
 #include "gpu_algo.h"
+
+namespace gpu
+{
 
 __global__ void print_cuda(char *a, int N)
 {
@@ -12,6 +16,18 @@ __global__ void print_cuda(char *a, int N)
     {
         a[idx]=p[idx];
     }
+}
+
+void count_occurrences( double *M, int nRows, int nCols, int start_count, int stop_count )
+{
+	for (int iRow = 0; iRow < nRows; iRow++)
+	{
+		for (int iCol = 0; iCol < nCols; iCol++)
+		{
+			printf("%1.2f ", *((M + iRow*nCols) + iCol));
+		}
+		printf("\n");
+	}
 }
 
 void hello_cuda(void)
@@ -53,4 +69,6 @@ void hello_cuda(void)
 	printf("\n");
     free(a_h);
 	cudaFree(a_d);
+}
+
 }

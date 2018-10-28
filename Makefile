@@ -83,8 +83,11 @@ test: $(OBJECTS)
 clean:
 	@echo "Deleting directories"
 	@$(RM) -r $(BUILD_PATH)
+	@$(RM) -r $(BUILD_CU_PATH)
 	@$(RM) -r $(BIN_PATH)
+	@$(RM) -r $(BIN_CU_PATH)
 	@$(RM) -r $(BUILD_MAIN_PATH)
+	@$(RM) -r $(BUILD_MAIN_CU_PATH)
 
 # Checks the executable and symlinks to the output
 .PHONY: all
