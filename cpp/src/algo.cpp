@@ -7,7 +7,6 @@
 #include "algo.h"
 #include "matrix.h"
 
-
 std::vector<int> count_occurrences( const Matrix & mat, int start_count, int stop_count )
 {
     std::vector<int> counter ((stop_count - start_count + 1), 0);

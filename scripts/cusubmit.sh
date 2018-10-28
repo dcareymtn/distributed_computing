@@ -1,7 +1,7 @@
 #!/bin/bash
 #BSUB -n 2 # number of cores that we are requesting
-#BSUB -o lsf.out # regular output file
-#BSUB -e lsf.err # stdeerr output file
+#BSUB -o scripts/lsf.out # regular output file
+#BSUB -e scripts/lsf.err # stdeerr output file
 #BSUB -q "windfall" # out group -- don't change
 #BSUB -J hello_world # job name
 #BSUB -R gpu

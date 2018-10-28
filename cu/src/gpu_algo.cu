@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
-#include "test.h"
+#include "gpu_algo.h"
 
 __global__ void print_cuda(char *a, int N)
 {
@@ -34,6 +34,7 @@ void hello_cuda(void)
 
     int blocksize = 4;
     int nblock = N/blocksize + (N%blocksize == 0 ? 0 : 1);
+	nblock = 100;
 
     print_cuda <<< nblock, blocksize >>>(a_d, N); // Run the kernel on the device
 
