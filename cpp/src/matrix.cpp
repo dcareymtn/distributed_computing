@@ -176,6 +176,17 @@ void Matrix::recvMPI( const int num_rows, const int num_cols, const int from_pro
     }  
 }
 
+void Matrix::copy_to_cptr( double *newM )
+{
+	for (int iRow = 0; iRow < rows; iRow++)
+	{
+		for (int iCol = 0; iCol < cols; iCol++)
+		{
+			*(newM + iRow * cols + iCol) = M[iRow][iCol];
+		}
+	}
+}
+
 Matrix Matrix::zeros( int rows, int cols )
 {
     return Matrix( rows, cols );

@@ -24,7 +24,7 @@ void count_occurrences( double *M, int nRows, int nCols, int start_count, int st
 	{
 		for (int iCol = 0; iCol < nCols; iCol++)
 		{
-			printf("%1.2f ", *((M + iRow*nCols) + iCol));
+			printf("%1.2f ", *((M + iRow*(nCols)) + iCol));
 		}
 		printf("\n");
 	}

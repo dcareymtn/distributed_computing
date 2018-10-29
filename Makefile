@@ -50,6 +50,7 @@ DEPS = $(OBJECTS:.o=.d)
 # flags "
 #CFLAGS = -std=c++11 -Wall -Wextra -g
 #CFLAGS = -std=c++11 -g -fopenmp
+#CFLAGS = -std=gnu++11 -g -fopenmp
 CFLAGS = -std=c++0x -g -fopenmp
 #CFLAGS = -g -fopenmp
 INCLUDES = -I inc/ -I /usr/local/include -I $(INC_PATH)
