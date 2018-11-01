@@ -8,7 +8,7 @@ namespace gpu
 
 void hello_cuda();
 
-void count_occurrences( double *M, int nRows, int nCols, int start_count, int stop_count );
+void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count );
 
 }
 

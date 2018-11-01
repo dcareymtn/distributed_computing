@@ -18,55 +18,70 @@ __global__ void print_cuda(char *a, int N)
     }
 }
 
-__global__ void gpu_count_occurrences( double * pM, int start_index, int stop_index )
+__global__ void gpu_count_occurrences( double * pM, int size, int start_index, int *d_counter )
 {
 
-	// Get the number of points
-	int nCount 	= stop_index - start_index + 1;
-
-	// Get the row and column in the larger array
-	int x 		= blockIdx.x * blockDim.x + threadIdx.x;
-	int y 		= blockIdx.y * blockDim.y + threadIdx.y;
-
-	// Get the grid dimension
-	int nx 		= blockDim.x * gridDim.x;
-	int ny 		= blockDim.y * gridDim.y;
-	int npix 	= nx * ny;
-
-	// Get linear thread Index in the block
-	int t 	= threadIdx.x + threadIdx.y * blockDim.x;
-
-	// Get total number of threads in 2D block
-	int nt = blockDim.x * blockDim.y;
+	int tid 	= blockIdx.x * blockDim.x + threadIdx.x;
 	
-	// Get the linear block index within the 2D grid
-	int g = blockIdx.x + blockIdx.y * gridDim.x;
-
-	// Initialize temporary accumulation array in global memory
-	unsigned int *gmem = out + g * nCount;
-
-	for (int i = t; i < npix; i += nt) 
-	{
-		gmem[i] = 0;
+	// Check that the thread ID is in the matrix
+	if (tid >= size) 
+	{ 
+		return;
 	}
 
-	for (int col = x; col < nCols; col += nx)
-	{
-		for (int row = y; row < nRows; row+= ny)
-		{
-			double val = pM[row * width + col];
-			atomicAdd(&gmem[pM[ row * width + col]
-		}
-
+	int bin = pM[tid] - start_index;
+	
+	atomicAdd( &d_counter[bin], 1 );
 }
 
-void count_occurrences( double *M, int nRows, int nCols, int start_count, int stop_count )
+void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count )
 {
 	
 	// Copy the matrix data to the gpu
+	double *d_M;
+	int *d_counter;
 	
+	int nbins 	= stop_count - start_count + 1;
 
-}
+	size_t counter_size = nbins * sizeof( int );
+	int *h_counter = (int *) malloc( counter_size );
+
+	for (int ii = 0; ii < nbins; ii++)
+	{
+		h_counter[ii] = 0;
+	}
+
+	int N = nRows * nCols;
+
+	size_t size = N * sizeof( double );
+	
+	cudaMalloc((void **)&d_M, size);
+	cudaMalloc((void **)&d_counter, counter_size);
+	
+	cudaMemcpy( d_M, h_M, size, cudaMemcpyHostToDevice);
+	
+	int blockSize = nCols;
+	int nBlock = N / blockSize + (N%blockSize == 0 ? 0 : 1);
+
+	gpu_count_occurrences<<< nBlock, blockSize >>>(d_M, size, start_count, d_counter);
+
+	cudaMemcpy( h_counter, d_counter, counter_size, cudaMemcpyDeviceToHost);
+
+	for (int ii = start_count; ii <= stop_count; ii++)
+	{
+		printf("%d ", ii);
+	}
+	printf("\n");
+	for (int ii = 0; ii < nbins; ii++)
+	{
+		printf("%d ", h_counter[ii]);
+	}
+	printf("\n");
+
+	free(h_counter);
+	cudaFree(d_M);
+	cudaFree(d_counter);
+}	
 
 void hello_cuda(void)
 {

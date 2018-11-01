@@ -9,6 +9,6 @@
 rm ~/workspace/distributed_computing/scripts/lsf*
 module load cuda
 module load openmpi 
-time ~/workspace/distributed_computing/buildcu/bin/testmain
+time ~/workspace/distributed_computing/build/bin/homework4
 
 ###end of script

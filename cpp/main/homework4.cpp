@@ -3,13 +3,13 @@
 
 int main(int argc, char **argv)
 {  
-
-	Matrix M = Matrix::randi(12,12,0,5);
-	double *pM = (double *) malloc(12*12*sizeof(double));
+	int counterMRows(128), counterMCols(128);
+	int start_count(0), stop_count(64);
+	Matrix M = Matrix::randi(counterMRows,counterMCols,start_count,stop_count);
+	double *pM = (double *) malloc(counterMRows*counterMCols*sizeof(double));
 	M.copy_to_cptr( pM );	
 		
-	M.write(stdout);
-	gpu::count_occurrences( pM, 12, 12, 1, 2);
+	gpu::count_occurrences( pM, counterMRows, counterMCols, start_count, stop_count);
 	
     free(pM);
 
