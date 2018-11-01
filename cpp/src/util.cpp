@@ -34,3 +34,19 @@ void printVectorTableCSV( FILE * f, std::vector<int> row1, std::vector<double> r
     fprintf( f, "\n\n\n");
 
 }
+
+void printMatrix( FILE * f, double * pM, int nRows, int nCols )
+{
+	
+	fprintf(f, "nRows = %d\n", nRows);
+	fprintf(f, "nRows = %d\n", nCols);
+	for (int iRow = 0; iRow < nRows; iRow++)
+	{
+		for (int iCol = 0; iCol < nCols; iCol++)
+		{
+			fprintf(f, "%1.2f ", *((pM + iRow*(nCols)) + iCol));
+		}
+		fprintf(f, "\n");
+	}
+
+}

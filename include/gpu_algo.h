@@ -1,6 +1,8 @@
 #ifndef GPU_ALGO_H
 #define GPU_ALGO_H
 
+#include <cuda.h>
+
 namespace gpu
 {
 
