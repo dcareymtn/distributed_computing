@@ -3,9 +3,12 @@
 
 int main(int argc, char **argv)
 {  
-	int counterMRows(128), counterMCols(128);
-	int start_count(0), stop_count(64);
+	int counterMRows(6), counterMCols(6);
+	int start_count(0), stop_count(3);
 	Matrix M = Matrix::randi(counterMRows,counterMCols,start_count,stop_count);
+
+	M.write(stdout);
+
 	double *pM = (double *) malloc(counterMRows*counterMCols*sizeof(double));
 	M.copy_to_cptr( pM );	
 		

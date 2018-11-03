@@ -18,20 +18,47 @@ __global__ void print_cuda(char *a, int N)
     }
 }
 
-__global__ void gpu_count_occurrences( double * pM, int size, int start_index, int *d_counter )
+__global__ void gpu_count_occurrences_global( double *dM, int size, int start_index, int stop_index, int *d_counter )
+{
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	
+	if (tid > size) return;
+
+	int bin = dM[tid] - start_index;
+
+	atomicAdd( &d_counter[bin], 1);
+
+}
+
+__global__ void gpu_count_occurrences_shared( double * pM, int size, int start_index, int stop_index, int *d_counter_partial )
 {
 
+	extern __shared__ int s_counter[];
+
 	int tid 	= blockIdx.x * blockDim.x + threadIdx.x;
-	
-	// Check that the thread ID is in the matrix
-	if (tid >= size) 
-	{ 
-		return;
+	int N = stop_index - start_index + 1;
+
+	if (blockIdx.x < (stop_index - start_index + 1))
+	{	
+		s_counter[blockIdx.x] = 0;
 	}
 
-	int bin = pM[tid] - start_index;
+	__syncthreads();
 	
-	atomicAdd( &d_counter[bin], 1 );
+	if (tid < size)
+	{
+		int sbin = pM[tid] - start_index;
+		atomicAdd( &s_counter[sbin], 1);
+	}
+
+	__syncthreads();
+
+	if ((threadIdx.x < N) && (tid < size))
+	{
+		atomicAdd( &d_counter_partial[threadIdx.x], s_counter[threadIdx.x] );
+	}
+	//d_counter_partial[blockIdx.x*N + threadIdx.x] = s_counter[threadIdx.x];
+
 }
 
 void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count )
@@ -39,8 +66,9 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	
 	// Copy the matrix data to the gpu
 	double *d_M;
+	int *d_counter_partial;
 	int *d_counter;
-	
+		
 	int nbins 	= stop_count - start_count + 1;
 
 	size_t counter_size = nbins * sizeof( int );
@@ -62,25 +90,36 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	
 	int blockSize = nCols;
 	int nBlock = N / blockSize + (N%blockSize == 0 ? 0 : 1);
+	
+	//cudaMalloc((void **)&d_counter_partial, nBlock*counter_size);
+	
+	//gpu_count_occurrences_global<<< nBlock, blockSize >>>( d_M, size, start_count, stop_count, d_counter );
+	int test[nbins];
+	size_t testsize = nbins*sizeof(int);
 
-	gpu_count_occurrences<<< nBlock, blockSize >>>(d_M, size, start_count, d_counter);
+	printf("Size of array = %d\n", sizeof(test));
+	printf("Sizeof array  = %d\n", testsize );
+	gpu_count_occurrences_shared<<< nBlock, blockSize, 64*sizeof(int)  >>>(d_M, size, start_count, stop_count, d_counter );
+	
+	// gpu_combine_count<<< nRows, nbins >>> (d_counter_partial, start_count, stop_count, d_counter );
 
 	cudaMemcpy( h_counter, d_counter, counter_size, cudaMemcpyDeviceToHost);
 
 	for (int ii = start_count; ii <= stop_count; ii++)
 	{
-		printf("%d ", ii);
+		printf("%4d | ", ii);
 	}
 	printf("\n");
 	for (int ii = 0; ii < nbins; ii++)
 	{
-		printf("%d ", h_counter[ii]);
+		printf("%3d |  ", h_counter[ii]);
 	}
 	printf("\n");
 
 	free(h_counter);
 	cudaFree(d_M);
 	cudaFree(d_counter);
+	//cudaFree(d_counter_partial);
 }	
 
 void hello_cuda(void)
