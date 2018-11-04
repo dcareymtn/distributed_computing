@@ -1,19 +1,19 @@
-Sender: LSF System <phpcadmin@gpu20>
-Subject: Job 117294: <homework4> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu55>
+Subject: Job 117915: <homework4> in cluster <phpc_cluster> Done
 
 Job <homework4> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <2*gpu20>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <4*gpu55>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Fri Nov  2 16:27:42 2018
-Results reported at Fri Nov  2 16:27:43 2018
+Started at Sat Nov  3 20:24:07 2018
+Results reported at Sat Nov  3 20:24:10 2018
 
 Your job looked like:
 
 ------------------------------------------------------------
 # LSBATCH: User input
 #!/bin/bash
-#BSUB -n 2 # number of cores that we are requesting
+#BSUB -n 4 # number of cores that we are requesting
 #BSUB -o scripts/lsf.out # regular output file
 #BSUB -e scripts/lsf.err # stdeerr output file
 #BSUB -q "windfall" # out group -- don't change
@@ -33,24 +33,24 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               0.32 sec.
+    CPU time :               0.39 sec.
+    Max Memory :             1 MB
+    Average Memory :         1.00 MB
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
+    Max Swap :               48 MB
+
+    Max Processes :          1
+    Max Threads :            1
 
 The output (if any) follows:
 
-nrows = 6
-ncols = 6
-  3.0   2.0   1.0   3.0   1.0   3.0 
-  2.0   0.0   1.0   1.0   2.0   3.0 
-  2.0   3.0   3.0   2.0   0.0   2.0 
-  0.0   0.0   3.0   0.0   3.0   1.0 
-  2.0   2.0   2.0   3.0   3.0   3.0 
-  1.0   2.0   2.0   2.0   1.0   3.0 
-
-   0 |    1 |    2 |    3 | 
-997520961 |  965813396 |  -1217148167 |  -1159098430 |  
+CUDA Initialization Took: 0.622385
+   0 |    1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |    9 |   10 | 
+  0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |  
+Compute Time: 0.02926871180534362793
+Compute Time: 0.00006580539047718048
 
 
 PS:

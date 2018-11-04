@@ -8,6 +8,7 @@
 using namespace std;
 
 class Matrix
+
 {
     public:
 
@@ -25,7 +26,8 @@ class Matrix
 
     int getRows( void ) const;
     int getCols( void ) const;
-    Matrix getSubMatrix( int start_row, int stop_row, int start_col, int stop_col) const;
+	int getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt) const;
+	Matrix getSubMatrix( int start_row, int stop_row, int start_col, int stop_col) const;
     
 	// Parallel support function
 
@@ -36,6 +38,7 @@ class Matrix
 
 	// Interfaces
 	void copy_to_cptr( double * newM );
+	void copy_to_c_zero_padded_blocks( double *newMArray, int nRowBreak, int filtNRows, int filtNCols ) const;
 
 	// Static construction methods
 

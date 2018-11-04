@@ -26,6 +26,13 @@ int Matrix::getCols( void ) const
     return this->cols;
 }
 
+int Matrix::getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt) const
+{
+	int col_size = this->cols + nColFilt - 1;
+	int row_size = this->rows/nRowBreak + nRowFilt -1;
+	return ( row_size * col_size * nRowBreak );
+}
+
 void Matrix::write( FILE * os ) const
 {
     fprintf(os, "nrows = %d\n", rows);
@@ -185,6 +192,28 @@ void Matrix::copy_to_cptr( double *newM )
 			*(newM + iRow * cols + iCol) = M[iRow][iCol];
 		}
 	}
+}
+
+void Matrix::copy_to_c_zero_padded_blocks( double *newMArray, int nRowBreak, int filtNRows, int filtNCols ) const
+{
+	std::vector<std::vector< Matrix > > MBlock = this->parBreakZeroPadForFilt( nRowBreak, filtNRows, filtNCols );
+
+	int fRows = MBlock[0][0].getRows(); 
+	int fCols = MBlock[0][0].getCols();
+	int fSize = fRows * fCols;
+	
+	for (int iRowBreak = 0; iRowBreak < nRowBreak; iRowBreak++)
+	{
+		Matrix thisM = MBlock[iRowBreak][0];
+		for (int iRow = 0; iRow < fRows; iRow++)
+		{
+			for (int iCol = 0; iCol < fCols; iCol++)
+			{
+				*(newMArray + iRowBreak * fSize + iRow*fCols + iCol) = MBlock[iRowBreak][0][iRow][iCol];
+			}
+		}
+	}
+
 }
 
 Matrix Matrix::zeros( int rows, int cols )

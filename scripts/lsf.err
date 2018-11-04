@@ -1,4 +1,5 @@
+rm: cannot remove `/home/u18/dcareymtn/workspace/distributed_computing/scripts/lsf*': No such file or directory
 
-real	0m0.521s
-user	0m0.027s
-sys	0m0.251s
+real	0m0.888s
+user	0m0.073s
+sys	0m0.283s

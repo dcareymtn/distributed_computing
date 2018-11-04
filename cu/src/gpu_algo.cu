@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
+#include <time.h>
 
 #include "gpu_algo.h"
 
@@ -30,7 +31,7 @@ __global__ void gpu_count_occurrences_global( double *dM, int size, int start_in
 
 }
 
-__global__ void gpu_count_occurrences_shared( double * pM, int size, int start_index, int stop_index, int *d_counter_partial )
+__global__ void gpu_count_occurrences_shared( double * pM, int size, int start_index, int stop_index, int *d_counter )
 {
 
 	extern __shared__ int s_counter[];
@@ -38,9 +39,10 @@ __global__ void gpu_count_occurrences_shared( double * pM, int size, int start_i
 	int tid 	= blockIdx.x * blockDim.x + threadIdx.x;
 	int N = stop_index - start_index + 1;
 
-	if (blockIdx.x < (stop_index - start_index + 1))
+	if (tid < (stop_index - start_index + 1))
 	{	
-		s_counter[blockIdx.x] = 0;
+		s_counter[tid] = 0;
+		d_counter[tid] = 0;
 	}
 
 	__syncthreads();
@@ -55,10 +57,16 @@ __global__ void gpu_count_occurrences_shared( double * pM, int size, int start_i
 
 	if ((threadIdx.x < N) && (tid < size))
 	{
-		atomicAdd( &d_counter_partial[threadIdx.x], s_counter[threadIdx.x] );
+		atomicAdd( &d_counter[threadIdx.x], s_counter[threadIdx.x] );
 	}
-	//d_counter_partial[blockIdx.x*N + threadIdx.x] = s_counter[threadIdx.x];
 
+}
+
+void cuda_init()
+{
+	double *dM;
+	cudaMalloc( (void **) &dM, 10*sizeof(double));
+	cudaFree(dM);
 }
 
 void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count )
@@ -66,7 +74,6 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	
 	// Copy the matrix data to the gpu
 	double *d_M;
-	int *d_counter_partial;
 	int *d_counter;
 		
 	int nbins 	= stop_count - start_count + 1;
@@ -82,26 +89,19 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	int N = nRows * nCols;
 
 	size_t size = N * sizeof( double );
-	
+
 	cudaMalloc((void **)&d_M, size);
 	cudaMalloc((void **)&d_counter, counter_size);
-	
+
 	cudaMemcpy( d_M, h_M, size, cudaMemcpyHostToDevice);
 	
-	int blockSize = nCols;
+	int factor = 4;
+
+	int blockSize = (factor * nCols < 1000 ? factor * nCols : 1000);
 	int nBlock = N / blockSize + (N%blockSize == 0 ? 0 : 1);
 	
-	//cudaMalloc((void **)&d_counter_partial, nBlock*counter_size);
-	
-	//gpu_count_occurrences_global<<< nBlock, blockSize >>>( d_M, size, start_count, stop_count, d_counter );
-	int test[nbins];
-	size_t testsize = nbins*sizeof(int);
-
-	printf("Size of array = %d\n", sizeof(test));
-	printf("Sizeof array  = %d\n", testsize );
-	gpu_count_occurrences_shared<<< nBlock, blockSize, 64*sizeof(int)  >>>(d_M, size, start_count, stop_count, d_counter );
-	
-	// gpu_combine_count<<< nRows, nbins >>> (d_counter_partial, start_count, stop_count, d_counter );
+	gpu_count_occurrences_shared<<< nBlock, blockSize, nbins*sizeof(int)  >>>(d_M, size, start_count, stop_count, d_counter );
+	//gpu_count_occurrences_global<<< nBlock, blockSize  >>>(d_M, size, start_count, stop_count, d_counter );
 
 	cudaMemcpy( h_counter, d_counter, counter_size, cudaMemcpyDeviceToHost);
 
@@ -119,8 +119,9 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	free(h_counter);
 	cudaFree(d_M);
 	cudaFree(d_counter);
-	//cudaFree(d_counter_partial);
 }	
+
+void rms_filter( double *h_m); 
 
 void hello_cuda(void)
 {
