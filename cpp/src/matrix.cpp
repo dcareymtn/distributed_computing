@@ -16,6 +16,45 @@ Matrix::Matrix( const int rows, const int cols ) :
 {
 }
 
+Matrix::Matrix( double *pBlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols )
+{
+	if ((nFiltRows % 2) != 1)
+	{
+		fprintf(stderr, "Error: Matrix::Matrix ... nFiltRows must be odd");
+		exit(0);
+	}
+
+	if ((nFiltCols % 2) != 1)
+	{
+		fprintf(stderr, "Error: Matrix ... n FiltCols must be odd");
+	}
+
+	this->rows = nRowBreak * (subMatNumRows - nFiltRows + 1);
+	this->cols = subMatNumCols - nFiltRows + 1;
+	printf("Num Cols = %d\n", this->cols);
+
+	this->M = std::vector< std::vector< double > > ( this->rows, std::vector< double > (this->cols, 0));
+
+	int extraRowIdx 	= (nFiltRows - 1)/2;
+	int extraColIdx 	= (nFiltCols - 1)/2;
+	int blockSize 		= subMatNumRows * subMatNumCols;
+	int currRow, currCol;
+	
+	for (int iRowBreak = 0; iRowBreak < nRowBreak; iRowBreak++)
+	{
+		for (int iSubRow = extraRowIdx; iSubRow < subMatNumRows - extraRowIdx; iSubRow++)
+		{
+			for (int iSubCol = extraColIdx; iSubCol < subMatNumCols - extraColIdx; iSubCol++)
+			{
+				currRow 	= iRowBreak*(subMatNumRows - nFiltRows + 1 ) + iSubRow - extraRowIdx;
+				currCol 	= iSubCol - extraColIdx;
+				this->M[currRow][currCol] 	= *(pBlockM + iRowBreak * blockSize + iSubRow * subMatNumCols  + iSubCol );
+			}
+		}
+	}
+
+}
+
 int Matrix::getRows( void ) const
 {
     return this->rows;
@@ -26,11 +65,26 @@ int Matrix::getCols( void ) const
     return this->cols;
 }
 
-int Matrix::getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt) const
+void Matrix::getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt, int &blockSize, int &subMatNumRows, int &subMatNumCols ) const
 {
-	int col_size = this->cols + nColFilt - 1;
-	int row_size = this->rows/nRowBreak + nRowFilt -1;
-	return ( row_size * col_size * nRowBreak );
+
+	if ((nRowFilt %2 != 1) || (nColFilt %2 != 1))
+	{
+		fprintf(stderr, "Filter Size must be odd");
+	}
+
+	if ((this->rows % 2) == 0)
+	{
+		subMatNumCols  	= this->cols + nColFilt - 1;
+		subMatNumRows  	= this->rows/nRowBreak + nRowFilt -1;
+		blockSize 		=  subMatNumRows * subMatNumCols * nRowBreak;
+	}
+	else
+	{
+		fprintf(stderr, "Matrix Rows size most be 2^N");
+		exit(0);
+	}
+
 }
 
 void Matrix::write( FILE * os ) const

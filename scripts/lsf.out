@@ -1,12 +1,12 @@
-Sender: LSF System <phpcadmin@gpu55>
-Subject: Job 117915: <homework4> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu66>
+Subject: Job 120469: <homework4> in cluster <phpc_cluster> Done
 
 Job <homework4> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <4*gpu55>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <4*gpu66>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Sat Nov  3 20:24:07 2018
-Results reported at Sat Nov  3 20:24:10 2018
+Started at Wed Nov  7 23:12:44 2018
+Results reported at Wed Nov  7 23:12:44 2018
 
 Your job looked like:
 
@@ -34,23 +34,34 @@ Successfully completed.
 Resource usage summary:
 
     CPU time :               0.39 sec.
-    Max Memory :             1 MB
-    Average Memory :         1.00 MB
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
-    Max Swap :               48 MB
-
-    Max Processes :          1
-    Max Threads :            1
 
 The output (if any) follows:
 
-CUDA Initialization Took: 0.622385
+CUDA Initialization Took: 0.236267
    0 |    1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |    9 |   10 | 
-  0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |  
-Compute Time: 0.02926871180534362793
-Compute Time: 0.00006580539047718048
+1892524560 |  -1406384613 |  527827535 |  1681664718 |  1893058904 |  -1405872260 |  528505173 |  1682183457 |  1529493325 |  2071363030 |  2071363182 |  
+Compute Time: 0.00120618194341659546
+Compute Time: 0.00005844980478286743
+ ------------- Part 2 ------------------
+nrows = 4
+ncols = 4
+  5.0   4.0   3.0   4.0 
+  4.0   0.0   3.0   5.0 
+  4.0   0.0   4.0   0.0 
+  1.0   4.0   2.0   0.0 
+
+Num Cols = 4
+Compute Time: 0.00000622123479843140
+nrows = 4
+ncols = 4
+  5.0   4.0   3.0   4.0 
+  4.0   0.0   3.0   5.0 
+  4.0   0.0   4.0   0.0 
+  1.0   4.0   2.0   0.0 
+
 
 
 PS:

@@ -36,8 +36,12 @@ int main(int argc, char **argv)
 	printf("Compute Time: %1.20f\n", stop_s - start_s );
 
 
-	
-	// Part 2
+	/***********************************************\
+	 * Part 2
+	\***********************************************/
+
+	printf(" ------------- Part 2 ------------------\n");
+
 	int filtMRows(4), filtMCols(4); // Matrix Size
 	int filtNRows(3), filtNCols(3); // Filter Size
 	int filt_start_count(0), filt_stop_count(5);
@@ -47,14 +51,31 @@ int main(int argc, char **argv)
 
 	M2.write(stdout);
 	
-	int blockSize = M2.getParFiltBlockSize( nRowBreak, filtNRows, filtNCols );
-	double *pBlockM = (double *) malloc(blockSize * sizeof(double) );
-	
+	int blockSize;
+	int subMatNumRows;
+	int subMatNumCols;
+
+	M2.getParFiltBlockSize( nRowBreak, filtNRows, filtNCols, blockSize, subMatNumRows, subMatNumCols );
+
+	double *pBlockM 		= (double *) malloc(blockSize * sizeof(double) );
+	double *pBlockMResult 	= (double *) malloc(blockSize * sizeof(double) );
+
 	M2.copy_to_c_zero_padded_blocks( pBlockM, nRowBreak, filtNRows, filtNCols );
+
+	gpu::rms_filter( pBlockMResult, pBlockM, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );	
+
+	
+	start_s = omp_get_wtime();
+	Matrix MResult( pBlockMResult, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );
+	stop_s = omp_get_wtime();
+	printf("Compute Time: %1.20f\n", stop_s - start_s );
+	
+	MResult.write(stdout);
 
 	free(pM);
 	free(pBlockM);	
-	
+	free(pBlockMResult);
+
 	return 0;
 
 }

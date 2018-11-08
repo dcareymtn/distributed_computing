@@ -121,7 +121,19 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	cudaFree(d_counter);
 }	
 
-void rms_filter( double *h_m); 
+void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols)
+{
+	double *_d_BlockM;
+
+	size_t __blockSize = nRowBreak * subMatNumRows * subMatNumCols * sizeof(double);
+
+	cudaMalloc((void **)&_d_BlockM, __blockSize );
+	cudaMemcpy( _d_BlockM, _h_BlockM, __blockSize, cudaMemcpyHostToDevice );
+	cudaMemcpy( hBlockMResult, _d_BlockM, __blockSize, cudaMemcpyDeviceToHost );
+
+	cudaFree(_d_BlockM);
+		
+}
 
 void hello_cuda(void)
 {

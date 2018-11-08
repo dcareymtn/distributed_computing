@@ -14,6 +14,7 @@ class Matrix
 
     Matrix( void );
     Matrix( const int rows, const int cols );
+	Matrix( double *pBlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols );
     void write( FILE * os ) const;
     vector<double>& operator[](int row);
     vector<double> operator[](int row) const;
@@ -26,7 +27,7 @@ class Matrix
 
     int getRows( void ) const;
     int getCols( void ) const;
-	int getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt) const;
+	void getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt, int &blockSize, int &subMatNumRows, int & subMatNumCols ) const;
 	Matrix getSubMatrix( int start_row, int stop_row, int start_col, int stop_col) const;
     
 	// Parallel support function
