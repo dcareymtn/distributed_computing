@@ -1,6 +1,4 @@
 
-real	0m1.291s
-user	0m1.015s
-sys	0m0.269s
-/home/u18/dcareymtn/.lsbatch/1541915050.121906.shell: line 1: syntax error near unexpected token `newline'
-/home/u18/dcareymtn/.lsbatch/1541915050.121906.shell: line 1: `Sender: LSF System <phpcadmin@gpu51>'
+real	0m0.690s
+user	0m1.903s
+sys	0m0.334s

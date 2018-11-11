@@ -1,5 +1,5 @@
 #!/bin/bash
-#BSUB -n 4 # number of cores that we are requesting
+#BSUB -n 8 # number of cores that we are requesting
 #BSUB -o scripts/lsf.out # regular output file
 #BSUB -e scripts/lsf.err # stdeerr output file
 #BSUB -q "windfall" # out group -- don't change
