@@ -31,7 +31,6 @@ Matrix::Matrix( double *pBlockM, int nRowBreak, int subMatNumRows, int subMatNum
 
 	this->rows = nRowBreak * (subMatNumRows - nFiltRows + 1);
 	this->cols = subMatNumCols - nFiltRows + 1;
-	printf("Num Cols = %d\n", this->cols);
 
 	this->M = std::vector< std::vector< double > > ( this->rows, std::vector< double > (this->cols, 0));
 
@@ -167,24 +166,23 @@ std::vector<std::vector<Matrix> > Matrix::parBreak( int nRowBreak ) const
 std::vector<std::vector< Matrix> > Matrix::parBreakZeroPadForFilt( int nRowBreak, int filtNRows, int filtNCols ) const
 {
     std::vector<std::vector<Matrix> > Mpar( nRowBreak, std::vector<Matrix> (1) );
-
     if (this->rows%nRowBreak != 0)
     {
         fprintf( stderr, "%d is Not divisible by %d\n", this->rows, nRowBreak);
         exit(0);
     }
-
+	printf( "matrix: 175\n");
     int newRowSize = this->rows / nRowBreak;
-    int newColSize = this->cols + ((filtNRows -1) );
+    int newColSizeOverlap = this->cols + ((filtNRows -1) );
 
     int newRowSizeOverlap = newRowSize + filtNRows - 1;
-
-    Matrix newOverlap = Matrix( newRowSizeOverlap, newColSize );
+    
+	Matrix newOverlap = Matrix( newRowSizeOverlap, newColSizeOverlap );
     int start_row_idx, stop_row_idx;
 
     int start_col_idx   = -(filtNCols - 1)/2;
     int stop_col_idx    = this->cols + (filtNCols - 1)/2;
-
+	
     int this_row, this_col;
 
     for (int iPar = 0; iPar < nRowBreak; iPar++)
@@ -194,14 +192,14 @@ std::vector<std::vector< Matrix> > Matrix::parBreakZeroPadForFilt( int nRowBreak
 
         for (int iNewRow = start_row_idx; iNewRow < stop_row_idx; iNewRow++)
         {
-            for (int iNewCol = start_col_idx; iNewCol < newColSize; iNewCol++)
+            for (int iNewCol = start_col_idx; iNewCol < stop_col_idx; iNewCol++)
             {
                 this_row = iNewRow + (filtNRows-1)/2 - iPar*newRowSize;
                 this_col = iNewCol + (filtNCols-1)/2;
 
                 if (iNewRow < 0 || iNewRow >= this->rows || iNewCol < 0 || iNewCol >= this->cols)
                 {
-                    newOverlap[this_row][this_col] = 0;
+					newOverlap[this_row][this_col] = 0;
                 }
                 else
                 {

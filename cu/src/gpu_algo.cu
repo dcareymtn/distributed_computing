@@ -62,37 +62,76 @@ __global__ void gpu_count_occurrences_shared( double * pM, int size, int start_i
 
 }
 
+__global__ void gpu_rms_filter_shared( double * _d_M, int filtNRows, int filtNCols, double * _d_MResult )
+{
+	
+	extern __shared__ int _l_M[];
+	
+	int subMatIdx = blockIdx.x;
+	
+	int blockSize	 = blockDim.x * blockDim.y;
+
+	int row = threadIdx.x;
+	int col = threadIdx.y;
+
+	_l_M[subMatIdx * blockSize + row * blockDim.y + col] = *(_d_M + subMatIdx * blockSize + row * blockDim.y + col );
+
+	__syncthreads();
+
+	double this_result(0);
+
+	int start_row 	= max(row - (filtNRows - 1)/2, 0);
+	int stop_row 	= min(row + (filtNRows - 1)/2, blockDim.x);
+	
+	int start_col 	= max(col - (filtNCols - 1)/2, 0);
+	int stop_col 	= min(col + (filtNCols - 1)/2, blockDim.y);
+
+	double temp(0);
+
+	for (int iRow = start_row; iRow <= stop_row; iRow++)
+	{
+		for (int iCol = start_col; iCol <= stop_col; iCol++)
+		{
+
+			temp 		= _l_M[ subMatIdx * blockSize + iRow * blockDim.y + iCol ];
+
+			this_result += temp*temp;
+
+		}	
+	}
+	
+	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) = this_result;
+}
+
 __global__ void gpu_rms_filter_global( double * _d_M, int filtNRows, int filtNCols, double * _d_MResult )
 {
 	int subMatIdx = blockIdx.x;
 	
 	int blockSize	 = blockDim.x * blockDim.y;
 
-	int row = threadIdx.y;
-	int col = threadIdx.x;
+	int row = threadIdx.x;
+	int col = threadIdx.y;
 
-	double this_result;
+	double this_result(0);
 
-	int start_row 	= max(row - (filtNRows - 1), 0);
-	int stop_row 	= min(row + (filtNRows - 1), blockDim.y);
+	int start_row 	= max(row - (filtNRows - 1)/2, 0);
+	int stop_row 	= min(row + (filtNRows - 1)/2, blockDim.x);
 	
-	int start_col 	= max(col - (filtNCols - 1), 0);
-	int stop_col 	= min(col + (filtNCols - 1), blockDim.x);
+	int start_col 	= max(col - (filtNCols - 1)/2, 0);
+	int stop_col 	= min(col + (filtNCols - 1)/2, blockDim.y);
 
 	double temp(0);
 
-	for (int iRow = start_row; iRow < stop_row; iRow++)
+	for (int iRow = start_row; iRow <= stop_row; iRow++)
 	{
-		for (int iCol = start_col; iCol < stop_col; iCol++)
+		for (int iCol = start_col; iCol <= stop_col; iCol++)
 		{
 			temp 		= *(_d_M + subMatIdx * blockSize + iRow * blockDim.y + iCol );
-			this_result += temp*temp;
-
-
+			this_result +=  temp*temp;
 		}	
 	}
 	
-	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) = this_result;
+	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) =  this_result;
 }
 
 void cuda_init()
@@ -154,25 +193,34 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	cudaFree(d_counter);
 }	
 
-void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols)
+void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols, bool bGlobal )
 {
-	double *_d_BlockM, *_d_BlockMResult;
+	double *_d_BlockM, *_d_BlockMResult, *_d_BlockMResultShared;
 
 	size_t __blockSize = nRowBreak * subMatNumRows * subMatNumCols * sizeof(double);
 
 	cudaMalloc((void **)&_d_BlockM, __blockSize );
 	cudaMalloc((void **)&_d_BlockMResult, __blockSize );
+	cudaMalloc((void **)&_d_BlockMResultShared, __blockSize );
 
 	cudaMemcpy( _d_BlockM, _h_BlockM, __blockSize, cudaMemcpyHostToDevice );
 
 	dim3 threadsPerBlock(subMatNumRows, subMatNumCols );
 
-	gpu_rms_filter_global<<< nRowBreak, threadsPerBlock >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );
+	if (bGlobal)
+	{
+		gpu_rms_filter_global<<< nRowBreak, threadsPerBlock >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );
+	}
+	else
+	{
+		gpu_rms_filter_shared<<< nRowBreak, threadsPerBlock, __blockSize  >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );	
+	}
 
 	cudaMemcpy( hBlockMResult, _d_BlockMResult, __blockSize, cudaMemcpyDeviceToHost );
 	
 	cudaFree(_d_BlockM);
-	cudaFree(_d_BlockMResult);	
+	cudaFree(_d_BlockMResult);
+	cudaFree(_d_BlockMResultShared);	
 }
 
 void hello_cuda(void)
