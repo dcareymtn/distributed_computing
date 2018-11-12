@@ -157,7 +157,7 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
 {
     Matrix filtM( M.getRows(), M.getCols() );
 
-    std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, filtNCols );
+    std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, 1, filtNRows, filtNCols );
 
     int sub_row_size = M.getRows()/nPar;
     int sub_col_size = M.getCols();
@@ -192,7 +192,7 @@ Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtN
     if (rank == 0)
     {
         Matrix filtM( M.getRows(), M.getCols() );
-        std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, filtNCols);
+        std::vector<std::vector<Matrix> > PMat = M.parBreakZeroPadForFilt( nPar, filtNRows, 1, filtNCols);
         
         int sub_row_size = M.getRows()/size;
         int sub_col_size = M.getCols();

@@ -51,11 +51,13 @@ int main(int argc, char **argv)
 	{
 		printf(" ------------- Part 2 ------------------\n");
 
-		int filtMRows(128), filtMCols(128); // Matrix Size
-		int filtNRows(5), filtNCols(5); // Filter Size
+		int filtMRows(1024), filtMCols(1024); // Matrix Size
+		int filtNRows(13), filtNCols(13); // Filter Size
 		int filt_start_count(0), filt_stop_count(5);
-		int nRowBreak = 64;
-		int nOMP_Par;
+		int squareBreak = 64;
+		int nRowBreak = squareBreak;
+		int nColBreak = squareBreak;
+		int nOMP_Par = 4;
 		Matrix M2 = Matrix::randi( filtMRows, filtMCols, filt_start_count, filt_stop_count );
 
 		M2.write(stdout);
@@ -64,43 +66,43 @@ int main(int argc, char **argv)
 		int subMatNumRows;
 		int subMatNumCols;
 
-		M2.getParFiltBlockSize( nRowBreak, filtNRows, filtNCols, blockSize, subMatNumRows, subMatNumCols );
-	
+		M2.getParFiltBlockSize( nRowBreak, nColBreak, filtNRows, filtNCols, blockSize, subMatNumRows, subMatNumCols );	
+
 
 		double *pBlockM 		= (double *) malloc(blockSize * sizeof(double) );
 		double *pBlockMResult 	= (double *) malloc(blockSize * sizeof(double) );
 		double *pBlockMResult2 	= (double *) malloc(blockSize * sizeof(double) );
 
-		M2.copy_to_c_zero_padded_blocks( pBlockM, nRowBreak, filtNRows, filtNCols );
-		
+		M2.copy_to_c_zero_padded_blocks( pBlockM, nRowBreak, nColBreak, filtNRows, filtNCols );
+
 		start_s = omp_get_wtime();
-		gpu::rms_filter( pBlockMResult, pBlockM, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols, true );	
+		gpu::rms_filter( pBlockMResult, pBlockM, nRowBreak, nColBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols, true );	
 		stop_s = omp_get_wtime();
 		double global_proc_time	= stop_s - start_s;
 
-		Matrix MResult1( pBlockMResult, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );
+		Matrix MResult1( pBlockMResult, nRowBreak, nColBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );
 		MResult1.write(stdout);
-		
+
 		start_s = omp_get_wtime();
-		gpu::rms_filter( pBlockMResult2, pBlockM, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols, false );	
+		gpu::rms_filter( pBlockMResult2, pBlockM, nRowBreak, nColBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols, false );	
 		stop_s = omp_get_wtime();
 		double shared_proc_time = stop_s - start_s;
 		
-		Matrix MResult( pBlockMResult2, nRowBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );
-		MResult.write(stdout);
+		Matrix MResult( pBlockMResult2, nRowBreak, nColBreak, subMatNumRows, subMatNumCols, filtNRows, filtNCols );
+		//MResult.write(stdout);
 
 		start_s = omp_get_wtime();
 		Matrix M3Result = RMS_filter2( M2, filtNRows, filtNCols );
 		stop_s = omp_get_wtime();
 		double serial_proc_time = stop_s - start_s;
-		M3Result.write(stdout);
+		//M3Result.write(stdout);
 
 		start_s = omp_get_wtime();
 		Matrix M4Result = RMS_filter2_par( M2, nOMP_Par, filtNRows, filtNCols );
 		stop_s = omp_get_wtime();
 		double omp_proc_time = stop_s - start_s;
 
-		printf("Number Block = %d\n", nRowBreak);
+		printf("Number Block = %d\n", nRowBreak*nColBreak);
 		printf("Number Threads = %d\n", subMatNumRows * subMatNumCols);
 		
 		printf("Global Compute Time: %1.20f\n", global_proc_time );	

@@ -16,7 +16,7 @@ Matrix::Matrix( const int rows, const int cols ) :
 {
 }
 
-Matrix::Matrix( double *pBlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols )
+Matrix::Matrix( double *pBlockM, int nRowBreak, int nColBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols )
 {
 	if ((nFiltRows % 2) != 1)
 	{
@@ -30,24 +30,29 @@ Matrix::Matrix( double *pBlockM, int nRowBreak, int subMatNumRows, int subMatNum
 	}
 
 	this->rows = nRowBreak * (subMatNumRows - nFiltRows + 1);
-	this->cols = subMatNumCols - nFiltRows + 1;
+	this->cols = nColBreak * (subMatNumCols - nFiltRows + 1);
 
 	this->M = std::vector< std::vector< double > > ( this->rows, std::vector< double > (this->cols, 0));
 
 	int extraRowIdx 	= (nFiltRows - 1)/2;
 	int extraColIdx 	= (nFiltCols - 1)/2;
+
 	int blockSize 		= subMatNumRows * subMatNumCols;
+	
 	int currRow, currCol;
 	
 	for (int iRowBreak = 0; iRowBreak < nRowBreak; iRowBreak++)
 	{
-		for (int iSubRow = extraRowIdx; iSubRow < subMatNumRows - extraRowIdx; iSubRow++)
+		for (int iColBreak = 0; iColBreak < nColBreak; iColBreak++)
 		{
-			for (int iSubCol = extraColIdx; iSubCol < subMatNumCols - extraColIdx; iSubCol++)
+			for (int iSubRow = extraRowIdx; iSubRow < subMatNumRows - extraRowIdx; iSubRow++)
 			{
-				currRow 	= iRowBreak*(subMatNumRows - nFiltRows + 1 ) + iSubRow - extraRowIdx;
-				currCol 	= iSubCol - extraColIdx;
-				this->M[currRow][currCol] 	= *(pBlockM + iRowBreak * blockSize + iSubRow * subMatNumCols  + iSubCol );
+				for (int iSubCol = extraColIdx; iSubCol < subMatNumCols - extraColIdx; iSubCol++)
+				{
+					currRow 	= iRowBreak*(subMatNumRows - nFiltRows + 1 ) + iSubRow - extraRowIdx;
+					currCol 	= iColBreak*(subMatNumCols - nFiltCols + 1 ) + iSubCol - extraColIdx;
+					this->M[currRow][currCol] 	= *(pBlockM + iRowBreak * blockSize * nColBreak + iColBreak*blockSize + iSubRow * subMatNumCols  + iSubCol );
+				}
 			}
 		}
 	}
@@ -64,7 +69,7 @@ int Matrix::getCols( void ) const
     return this->cols;
 }
 
-void Matrix::getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt, int &blockSize, int &subMatNumRows, int &subMatNumCols ) const
+void Matrix::getParFiltBlockSize(int nRowBreak, int nColBreak, int nRowFilt, int nColFilt, int &blockSize, int &subMatNumRows, int &subMatNumCols ) const
 {
 
 	if ((nRowFilt %2 != 1) || (nColFilt %2 != 1))
@@ -74,9 +79,9 @@ void Matrix::getParFiltBlockSize(int nRowBreak, int nRowFilt, int nColFilt, int 
 
 	if ((this->rows % 2) == 0)
 	{
-		subMatNumCols  	= this->cols + nColFilt - 1;
+		subMatNumCols  	= this->cols/nColBreak + nColFilt - 1;
 		subMatNumRows  	= this->rows/nRowBreak + nRowFilt -1;
-		blockSize 		=  subMatNumRows * subMatNumCols * nRowBreak;
+		blockSize 		= subMatNumRows * subMatNumCols * nRowBreak * nColBreak;
 	}
 	else
 	{
@@ -163,51 +168,60 @@ std::vector<std::vector<Matrix> > Matrix::parBreak( int nRowBreak ) const
     
 }
 
-std::vector<std::vector< Matrix> > Matrix::parBreakZeroPadForFilt( int nRowBreak, int filtNRows, int filtNCols ) const
+std::vector<std::vector< Matrix> > Matrix::parBreakZeroPadForFilt( int nRowBreak, int nColBreak, int filtNRows, int filtNCols ) const
 {
-    std::vector<std::vector<Matrix> > Mpar( nRowBreak, std::vector<Matrix> (1) );
+    std::vector<std::vector<Matrix> > Mpar( nRowBreak, std::vector<Matrix> (nColBreak) );
     if (this->rows%nRowBreak != 0)
     {
         fprintf( stderr, "%d is Not divisible by %d\n", this->rows, nRowBreak);
         exit(0);
     }
-	printf( "matrix: 175\n");
-    int newRowSize = this->rows / nRowBreak;
-    int newColSizeOverlap = this->cols + ((filtNRows -1) );
+    
+	int newRowSize  = this->rows / nRowBreak;
+	int newColSize 	= this->cols / nColBreak;
 
     int newRowSizeOverlap = newRowSize + filtNRows - 1;
+    int newColSizeOverlap = newColSize + filtNCols - 1;
     
 	Matrix newOverlap = Matrix( newRowSizeOverlap, newColSizeOverlap );
-    int start_row_idx, stop_row_idx;
+    
+	int start_row_idx, stop_row_idx;
+	int start_col_idx, stop_col_idx;
 
-    int start_col_idx   = -(filtNCols - 1)/2;
-    int stop_col_idx    = this->cols + (filtNCols - 1)/2;
-	
     int this_row, this_col;
 
-    for (int iPar = 0; iPar < nRowBreak; iPar++)
+    for (int iRowBreak = 0; iRowBreak < nRowBreak; iRowBreak++)
     {
-        start_row_idx  = iPar*newRowSize - (filtNRows - 1)/2;
-        stop_row_idx   = iPar*newRowSize + newRowSize + (filtNRows-1)/2;
+		for (int iColBreak = 0; iColBreak < nColBreak; iColBreak++)
+		{
+			start_row_idx  	= iRowBreak*newRowSize - (filtNRows - 1)/2;
+			stop_row_idx   	= iRowBreak*newRowSize + newRowSize + (filtNRows - 1)/2;
 
-        for (int iNewRow = start_row_idx; iNewRow < stop_row_idx; iNewRow++)
-        {
-            for (int iNewCol = start_col_idx; iNewCol < stop_col_idx; iNewCol++)
-            {
-                this_row = iNewRow + (filtNRows-1)/2 - iPar*newRowSize;
-                this_col = iNewCol + (filtNCols-1)/2;
+   			start_col_idx   = iColBreak*newColSize - (filtNCols - 1)/2;
+    		stop_col_idx    = iColBreak*newColSize + newColSize + (filtNCols - 1)/2;
 
-                if (iNewRow < 0 || iNewRow >= this->rows || iNewCol < 0 || iNewCol >= this->cols)
-                {
-					newOverlap[this_row][this_col] = 0;
-                }
-                else
-                {
-                    newOverlap[this_row][this_col] = this->M[iNewRow][iNewCol];
-                }
-            }
-        }
-        Mpar[iPar][0] = newOverlap;
+			for (int iNewRow = start_row_idx; iNewRow < stop_row_idx; iNewRow++)
+			{
+				for (int iNewCol = start_col_idx; iNewCol < stop_col_idx; iNewCol++)
+				{
+					this_row = iNewRow + (filtNRows-1)/2 - iRowBreak*newRowSize;
+					this_col = iNewCol + (filtNCols-1)/2 - iColBreak*newColSize;
+
+					if (iNewRow < 0 || iNewRow >= this->rows || iNewCol < 0 || iNewCol >= this->cols)
+					{
+						newOverlap[this_row][this_col] = 0;
+					}
+					else
+					{
+						newOverlap[this_row][this_col] = this->M[iNewRow][iNewCol];
+					}
+				}
+			}
+	        
+			Mpar[iRowBreak][iColBreak] = newOverlap;
+		
+		}
+
     }
 
     return Mpar;
@@ -246,9 +260,9 @@ void Matrix::copy_to_cptr( double *newM )
 	}
 }
 
-void Matrix::copy_to_c_zero_padded_blocks( double *newMArray, int nRowBreak, int filtNRows, int filtNCols ) const
+void Matrix::copy_to_c_zero_padded_blocks( double *newMArray, int nRowBreak, int nColBreak, int filtNRows, int filtNCols ) const
 {
-	std::vector<std::vector< Matrix > > MBlock = this->parBreakZeroPadForFilt( nRowBreak, filtNRows, filtNCols );
+	std::vector<std::vector< Matrix > > MBlock = this->parBreakZeroPadForFilt( nRowBreak, nColBreak, filtNRows, filtNCols );
 
 	int fRows = MBlock[0][0].getRows(); 
 	int fCols = MBlock[0][0].getCols();
@@ -256,12 +270,15 @@ void Matrix::copy_to_c_zero_padded_blocks( double *newMArray, int nRowBreak, int
 	
 	for (int iRowBreak = 0; iRowBreak < nRowBreak; iRowBreak++)
 	{
-		Matrix thisM = MBlock[iRowBreak][0];
-		for (int iRow = 0; iRow < fRows; iRow++)
+		for (int iColBreak = 0; iColBreak < nColBreak; iColBreak++)
 		{
-			for (int iCol = 0; iCol < fCols; iCol++)
+			Matrix thisM = MBlock[iRowBreak][0];
+			for (int iRow = 0; iRow < fRows; iRow++)
 			{
-				*(newMArray + iRowBreak * fSize + iRow*fCols + iCol) = MBlock[iRowBreak][0][iRow][iCol];
+				for (int iCol = 0; iCol < fCols; iCol++)
+				{
+					*(newMArray + iRowBreak * fSize * nColBreak + iColBreak * fSize + iRow*fCols + iCol) = MBlock[iRowBreak][iColBreak][iRow][iCol];
+				}
 			}
 		}
 	}

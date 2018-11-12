@@ -94,13 +94,12 @@ __global__ void gpu_rms_filter_shared( double * _d_M, int filtNRows, int filtNCo
 		{
 
 			temp 		= _l_M[ subMatIdx * blockSize + iRow * blockDim.y + iCol ];
-
 			this_result += temp*temp;
 
 		}	
 	}
 	
-	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) = this_result;
+	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) = sqrt( this_result );
 }
 
 __global__ void gpu_rms_filter_global( double * _d_M, int filtNRows, int filtNCols, double * _d_MResult )
@@ -131,7 +130,7 @@ __global__ void gpu_rms_filter_global( double * _d_M, int filtNRows, int filtNCo
 		}	
 	}
 	
-	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) =  this_result;
+	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) =  sqrt( this_result );
 }
 
 void cuda_init()
@@ -193,11 +192,11 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 	cudaFree(d_counter);
 }	
 
-void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols, bool bGlobal )
+void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int nColBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols, bool bGlobal )
 {
 	double *_d_BlockM, *_d_BlockMResult, *_d_BlockMResultShared;
 
-	size_t __blockSize = nRowBreak * subMatNumRows * subMatNumCols * sizeof(double);
+	size_t __blockSize = nRowBreak * nColBreak * subMatNumRows * subMatNumCols * sizeof(double);
 
 	cudaMalloc((void **)&_d_BlockM, __blockSize );
 	cudaMalloc((void **)&_d_BlockMResult, __blockSize );
@@ -209,11 +208,11 @@ void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int su
 
 	if (bGlobal)
 	{
-		gpu_rms_filter_global<<< nRowBreak, threadsPerBlock >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );
+		gpu_rms_filter_global<<< nRowBreak * nColBreak, threadsPerBlock >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );
 	}
 	else
 	{
-		gpu_rms_filter_shared<<< nRowBreak, threadsPerBlock, __blockSize  >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );	
+		gpu_rms_filter_shared<<< nRowBreak * nColBreak, threadsPerBlock, __blockSize  >>>( _d_BlockM, nFiltRows, nFiltCols, _d_BlockMResult );	
 	}
 
 	cudaMemcpy( hBlockMResult, _d_BlockMResult, __blockSize, cudaMemcpyDeviceToHost );
