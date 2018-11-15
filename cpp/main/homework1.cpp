@@ -2,9 +2,9 @@
 #include <omp.h>
 #include <mpi.h>
 
-#include "matrix.h"
-#include "algo.h"
-#include "util.h"
+#include "matrix.hpp"
+#include "algo.hpp"
+#include "util.hpp"
 
 void problem1()
 {

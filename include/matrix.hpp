@@ -15,7 +15,7 @@ class Matrix
     Matrix( void );
     Matrix( const int rows, const int cols );
 	Matrix( double *pBlockM, int nRowBreak, int nColBreak, int subMatNumRows, int subMatNumCols, int nFiltRows, int nFiltCols );
-    void write( FILE * os ) const;
+    void write( FILE * os, bool bExtra = false ) const;
     vector<double>& operator[](int row);
     vector<double> operator[](int row) const;
 
@@ -46,6 +46,7 @@ class Matrix
     static Matrix zeros( const int rows, const int cols );
     static Matrix eye(int n);
     static Matrix randi( int rows, int cols, int low_int, int high_int );
+
 
 	// Static operations
     static Matrix stack( const Matrix & top, const Matrix & middle, const Matrix & bottom );

@@ -1,7 +1,6 @@
 #include <mpi.h>
 
-#include "matrix.h"
-#include "matrix.h"
+#include "matrix.hpp"
 
 using namespace std;
 
@@ -91,20 +90,31 @@ void Matrix::getParFiltBlockSize(int nRowBreak, int nColBreak, int nRowFilt, int
 
 }
 
-void Matrix::write( FILE * os ) const
+void Matrix::write( FILE * os, bool bExtra ) const
 {
-    fprintf(os, "nrows = %d\n", rows);
-    fprintf(os, "ncols = %d\n", cols);
+	if (bExtra)
+	{
+		fprintf(os, "nrows = %d\n", rows);
+		fprintf(os, "ncols = %d\n", cols);
+	}
 
-    for (int iRow = 0; iRow < rows; iRow++ )
-    {
-        for (int iCol = 0; iCol < cols; iCol++ )
-        {
-            fprintf(os, "%5.1f ", M[iRow][iCol]);
-        }
-        fprintf(os, "\n");
-    }
-    fprintf(os, "\n");
+	if (os != NULL)
+	{
+
+		for (int iRow = 0; iRow < rows; iRow++ )
+		{
+			for (int iCol = 0; iCol < cols; iCol++ )
+			{
+				fprintf(os, "%5.1f ", M[iRow][iCol]);
+			}
+			fprintf(os, "\n");
+		}
+		fprintf(os, "\n");
+	
+	}else
+	{
+		fprintf(stderr, "Error:matrix::write - not a valid file");
+	}
 }
 
 

@@ -4,8 +4,8 @@
 #include <math.h>
 #include <mpi.h>
 
-#include "algo.h"
-#include "matrix.h"
+#include "algo.hpp"
+#include "matrix.hpp"
 
 std::vector<int> count_occurrences( const Matrix & mat, int start_count, int stop_count )
 {

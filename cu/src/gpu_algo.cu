@@ -140,7 +140,7 @@ void cuda_init()
 	cudaFree(dM);
 }
 
-void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count )
+void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int stop_count, bool bGlobal )
 {
 	
 	// Copy the matrix data to the gpu
@@ -170,22 +170,29 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 
 	int blockSize = (factor * nCols < 1000 ? factor * nCols : 1000);
 	int nBlock = N / blockSize + (N%blockSize == 0 ? 0 : 1);
-	
-	gpu_count_occurrences_shared<<< nBlock, blockSize, nbins*sizeof(int)  >>>(d_M, size, start_count, stop_count, d_counter );
-	//gpu_count_occurrences_global<<< nBlock, blockSize  >>>(d_M, size, start_count, stop_count, d_counter );
+
+	if (bGlobal)
+	{
+		gpu_count_occurrences_global<<< nBlock, blockSize  >>>(d_M, size, start_count, stop_count, d_counter );
+	}
+	else
+	{
+		gpu_count_occurrences_shared<<< nBlock, blockSize, nbins*sizeof(int)  >>>(d_M, size, start_count, stop_count, d_counter );
+	}
+
 
 	cudaMemcpy( h_counter, d_counter, counter_size, cudaMemcpyDeviceToHost);
 
-	for (int ii = start_count; ii <= stop_count; ii++)
-	{
-		printf("%4d | ", ii);
-	}
-	printf("\n");
-	for (int ii = 0; ii < nbins; ii++)
-	{
-		printf("%3d |  ", h_counter[ii]);
-	}
-	printf("\n");
+	//for (int ii = start_count; ii <= stop_count; ii++)
+	//{
+	//	printf("%4d | ", ii);
+	//}
+	//printf("\n");
+	//for (int ii = 0; ii < nbins; ii++)
+	//{
+	//	printf("%3d |  ", h_counter[ii]);
+	//}
+	//printf("\n");
 
 	free(h_counter);
 	cudaFree(d_M);
@@ -261,6 +268,37 @@ void hello_cuda(void)
 	printf("\n");
     free(a_h);
 	cudaFree(a_d);
+}
+
+
+void particle_swarm_eval( double (*f)(int dim, double * vec), 
+							int dim, 
+							int numParticles, 
+							double * pos_vec_array, 
+							double * vel_vec_array, 
+							double a_1, double a_2, 
+							double * P_b, double * P_g, 
+							double *next_pos_vec_array)
+{
+	// Initialize the particles
+
+	// Using the current position of the particles (from pos_vec_array), compute the score at each particle
+
+	// Using the current position of the particles (from pos_vec_array), Update the Personal best for each particle
+
+	// Of all the particles, do a maximum reduction on global data to find the global max
+
+	// Randomly generate the two random vectors [0,1]
+
+	// Move the particles and update the positions
+
+	// Compute the convergence metric
+
+	// If done, then exit
+
+	// Else, repeat up to max num times
+	
+
 }
 
 }

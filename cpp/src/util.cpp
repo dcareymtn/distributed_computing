@@ -1,6 +1,7 @@
-#include "util.h"
 #include <vector>
 #include <iostream>
+
+#include "util.hpp"
 
 void printVectorTableCSV( FILE * f, std::vector<int> v, int start_int, int stop_int )
 {
