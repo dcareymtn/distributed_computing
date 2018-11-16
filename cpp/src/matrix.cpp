@@ -1,4 +1,6 @@
 #include <mpi.h>
+#include <time.h>
+#include <math.h>
 
 #include "matrix.hpp"
 
@@ -155,6 +157,20 @@ Matrix Matrix::getSubMatrix( int start_row, int stop_row, int start_col, int sto
     }
 
     return newMat;
+}
+
+Matrix Matrix::operator*( const double &val) const
+{
+	Matrix new_mat(rows, cols); 
+
+	for (int r = 0; r < rows; r++)
+	{
+		for (int c = 0; c < cols; c++)
+		{
+			new_mat[r][c] = M[r][c] * val;
+		}
+	}
+	return new_mat;
 }
 
 std::vector<std::vector<Matrix> > Matrix::parBreak( int nRowBreak ) const
@@ -325,6 +341,37 @@ Matrix Matrix::randi( int rows, int cols, int low_int, int high_int )
     }
 
     return new_mat;
+}
+
+
+Matrix Matrix::unifrand( int rows, int cols, double low, double high )
+{
+	Matrix new_mat = Matrix( rows, cols );
+	srand(time(NULL));
+	for (int r = 0; r < rows; r++)
+	{
+		for (int c = 0; c < cols; c++)
+		{
+			new_mat[r][c]	= ((double)rand()/(double)RAND_MAX) * (high - low) - (high-low)/2;
+		}
+	}
+
+	return new_mat;
+}
+
+Matrix Matrix::inf( int rows, int cols )
+{
+	Matrix new_mat( rows, cols );
+
+	for (int r = 0; r < rows; r++)
+	{
+		for (int c = 0; c < cols; c++)
+		{
+			new_mat[r][c] 	= INFINITY;
+		}
+	}
+
+	return new_mat;
 }
 
 Matrix Matrix::stack( const Matrix & top, const Matrix & middle, const Matrix & bottom )

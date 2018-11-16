@@ -16,4 +16,14 @@ Matrix RMS_filter2_par( const Matrix & M, int nPar, int filtNRows, int filtNCols
 
 Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtNCols );
 
+
+void particle_swarm_eval( double (*f)(int dim, double * vec), 
+							int dim, 
+							int numParticles, 
+							double pos_lower_bound,
+							double pos_upper_bound,
+							double a_1, double a_2,
+							double max_vel, int max_iter, 
+							bool bHighIsGood = false); 
+
 #endif

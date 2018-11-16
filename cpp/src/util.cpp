@@ -51,3 +51,44 @@ void printMatrix( FILE * f, double * pM, int nRows, int nCols )
 	}
 
 }
+
+void printVector( FILE * f, int dim, double * vec )
+{
+	for (int i = 0; i < dim; i++)
+	{
+		fprintf( f, "%5.1f ", vec[i] );
+	}
+}
+
+void printMatrix( FILE * f, int rows, int cols, double * vec, bool bTranspose )
+{
+	if (bTranspose)
+	{
+		for (int c = 0; c < cols; c++)
+		{
+			for (int r = 0; r < rows; r++)
+			{
+				fprintf( f, "%1.5f ", vec[ r * cols + c ]);
+			}
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\n");
+	}
+	else
+	{
+		for (int r = 0; r < rows; r++)
+		{
+			for (int c = 0; c < cols; c++)
+			{
+				fprintf( f, "%1.5f ", vec[ r * cols + c ]);
+			}
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\n");
+	}
+}
+
+double unifrand( double min, double max)
+{
+	return (((double)rand()/(double)RAND_MAX) * (max - min)) + min;
+}

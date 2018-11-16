@@ -32,7 +32,8 @@ build/main/final_project.o: cpp/main/final_project.cpp include/matrix.hpp \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/info_inln.h \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/win_inln.h \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/file_inln.h \
- include/math_eval.hpp include/matrix.hpp include/cmath_eval.h
+ include/math_eval.hpp include/matrix.hpp include/algo.hpp \
+ include/cmath_eval.h
 
 include/matrix.hpp:
 
@@ -105,5 +106,7 @@ include/matrix.hpp:
 include/math_eval.hpp:
 
 include/matrix.hpp:
+
+include/algo.hpp:
 
 include/cmath_eval.h:

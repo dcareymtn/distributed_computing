@@ -3,9 +3,12 @@
 #include <vector>
 #include <math.h>
 #include <mpi.h>
+#include <time.h>
 
 #include "algo.hpp"
 #include "matrix.hpp"
+#include "cmath_eval.h"
+#include "util.hpp"
 
 std::vector<int> count_occurrences( const Matrix & mat, int start_count, int stop_count )
 {
@@ -253,4 +256,126 @@ Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtN
     }
 
     return Matrix(2,2);
+}
+
+
+void particle_swarm_eval( double (*f)(int dim, double * vec), 
+							int dim, 
+							int numParticles,
+							double pos_lower_bound,
+							double pos_upper_bound, 
+							double a_1, double a_2,
+							double max_vel,
+							int max_iter, 
+							bool bHighIsGood )
+{
+	
+	srand(time(NULL));
+
+	// Initialize the particles and their scoring
+	Matrix vel = Matrix::zeros( numParticles, dim);
+
+	double score_best 	= INFINITY;
+
+	int score_fac = bHighIsGood ? -1 : 1;
+	
+	// Using the current position of the particles (from pos_vec_array), compute the score at each particle
+	// Using the current position of the particles (from pos_vec_array), Update the Personal best for each particle
+	double *c_pos 		= (double *)malloc( dim * numParticles * sizeof(double));
+	double *c_vel 		= (double *)malloc( dim * numParticles * sizeof(double));
+	double *pb_pos 		= (double *)malloc( dim * numParticles * sizeof(double));
+	double *pb_score 	= (double *)malloc( numParticles * sizeof(double));
+	double *gb_pos 		= (double *)malloc( dim * sizeof( double ));
+	double r_1;
+	double r_2;
+	double gb_score 	= INFINITY;
+	double this_score = 0;
+	int idx 	= 0;
+
+	// Initialize scoreing
+		for (int iParticle = 0; iParticle < numParticles; iParticle++)
+		{
+			pb_score[iParticle] 	= INFINITY;
+			for (int iDim = 0; iDim < dim; iDim++)
+			{
+				c_pos[iParticle * dim + iDim] 	= unifrand( pos_lower_bound, pos_upper_bound ); 
+				c_vel[iParticle * dim + iDim] 	= 0;
+				pb_pos[iParticle * dim + iDim] 	= c_pos[iParticle * dim + iDim];
+			}
+		}
+
+	// Start the optimization
+		for (int iter = 0; iter < max_iter; iter++)
+		{
+			printf("--------------------------------------------\n");
+			printf("            Iteration %d   \n", iter);
+			printf("--------------------------------------------\n");
+
+			for (int iParticle = 0; iParticle < numParticles; iParticle++)
+			{
+				this_score = score_fac * feval_c( f, dim, &c_pos[iParticle * dim] );
+				pb_score[iParticle] = min( pb_score[iParticle], this_score );
+			}
+
+			printf("Current Position\n");	
+			printMatrix( stdout, numParticles, dim, c_pos, true );
+			printf("Current Velocity\n"    );
+			printMatrix( stdout, numParticles, dim, c_vel, true );
+			printf("Personal Best Position\n"    );
+			printMatrix( stdout, numParticles, dim, pb_pos, true );
+			printf("Personal Best Score\n");
+			printMatrix( stdout, 1, numParticles, pb_score );
+			
+			// Of all the particles, do a maximum reduction on global data to find the global max
+			for (int iParticle = 0; iParticle < numParticles; iParticle++)
+			{
+				if (pb_score[iParticle] < gb_score)
+				{
+					gb_score 	= min( pb_score[iParticle], gb_score);
+					for (int iDim = 0; iDim < dim; iDim++)
+					{
+						gb_pos[iDim] 	= c_pos[iParticle * dim + iDim];
+					}
+				}
+			}
+
+			fprintf( stdout, "global score = %f\n", gb_score);
+			printf("Global Best Position\n");
+			printMatrix( stdout, dim, 1, gb_pos );	
+
+			// Randomly generate the two random vectors [0,1]
+			// Move the particles and update the positions	
+			
+			for (int iParticle = 0; iParticle < numParticles; iParticle++)
+			{
+				r_1 	= unifrand(0.0,1.0);
+				r_2 	= unifrand(0.0,1.0);
+	
+				for (int iDim = 0; iDim < dim; iDim++)
+				{
+					idx 	= iParticle * dim + iDim;
+					
+					c_vel[idx] 	= c_vel[idx] +  a_1 * r_1 * (pb_pos[idx] - c_pos[idx]) + a_2 * r_2 * (gb_pos[iDim] - c_pos[idx]);
+					c_vel[idx] 	= c_vel[idx] * (fabs(c_vel[idx]) > max_vel ? max_vel/fabs(c_vel[idx]) : 1);
+					c_pos[idx] 	= c_pos[idx] + c_vel[idx];
+				}
+
+			}
+
+		}
+
+
+
+	// Compute the convergence metric
+
+	// If done, then exit
+
+	// Else, repeat up to max num times
+	
+	free(c_pos);
+	free(c_vel);
+	free(pb_pos);
+	free(pb_score);
+	free(gb_pos);
+
 }

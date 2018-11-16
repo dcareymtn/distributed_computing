@@ -31,7 +31,8 @@ build/lib/algo.o: cpp/src/algo.cpp /uaopt/openmpi/1.8.1/include/mpi.h \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/info_inln.h \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/win_inln.h \
  /uaopt/openmpi/1.8.1/include/openmpi/ompi/mpi/cxx/file_inln.h \
- include/algo.hpp include/matrix.hpp include/matrix.hpp
+ include/algo.hpp include/matrix.hpp include/matrix.hpp \
+ include/cmath_eval.h include/util.hpp
 
 /uaopt/openmpi/1.8.1/include/mpi.h:
 
@@ -104,3 +105,7 @@ include/algo.hpp:
 include/matrix.hpp:
 
 include/matrix.hpp:
+
+include/cmath_eval.h:
+
+include/util.hpp:

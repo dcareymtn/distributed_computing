@@ -24,6 +24,18 @@ double root_mean_square( int dim, double * vec)
 	}
 }
 
+double sum_of_the_squares( int dim, double * vec)
+{
+	double res = 0;
+	
+	for (int i = 0; i < dim; i++)
+	{
+		res += vec[i]*vec[i];
+	}
+	
+	return res;
+}
+
 double x2_plus_y2( double x, double y)
 {
 	return x*x+y*y;

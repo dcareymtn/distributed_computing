@@ -29,6 +29,9 @@ class Matrix
     int getCols( void ) const;
 	void getParFiltBlockSize(int nRowBreak, int nColBreak, int nRowFilt, int nColFilt, int &blockSize, int &subMatNumRows, int & subMatNumCols ) const;
 	Matrix getSubMatrix( int start_row, int stop_row, int start_col, int stop_col) const;
+   	
+	// Operators
+	Matrix operator*( const double &val) const;
     
 	// Parallel support function
 
@@ -46,7 +49,8 @@ class Matrix
     static Matrix zeros( const int rows, const int cols );
     static Matrix eye(int n);
     static Matrix randi( int rows, int cols, int low_int, int high_int );
-
+	static Matrix unifrand( int rows, int cols, double low, double high );
+	static Matrix inf( int rows, int cols );
 
 	// Static operations
     static Matrix stack( const Matrix & top, const Matrix & middle, const Matrix & bottom );
