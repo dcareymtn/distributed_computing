@@ -27,9 +27,9 @@ int main()
 
 	Matrix Z = feval(f, X, Y);
 	
-//	X.write(pFileX);
-//	Y.write(pFileY); 
-//	Z.write(pFileZ);
+	X.write(pFileX);
+	Y.write(pFileY); 
+	Z.write(pFileZ);
 
 	double (*g)(int, double*);
 
