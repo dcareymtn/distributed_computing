@@ -42,7 +42,7 @@ int main()
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 0.2;
-	int max_iter 	= 20;
+	int max_iter 	= 30;
 
 	particle_swarm_eval( 	g, 
 							dim, 
