@@ -8,7 +8,7 @@
 
 int main()
 {
-	double opt_limit = 5;
+	double opt_limit = 10;
 	FILE *pFileX;
 	FILE *pFileY;
 	FILE *pFileZ;
@@ -42,7 +42,7 @@ int main()
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 0.2;
-	int max_iter 	= 40;
+	int max_iter 	= 100;
 
 	particle_swarm_eval( 	g, 
 							dim, 
