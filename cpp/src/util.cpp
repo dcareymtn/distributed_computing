@@ -68,11 +68,10 @@ void printMatrix( FILE * f, int rows, int cols, double * vec, bool bTranspose )
 		{
 			for (int r = 0; r < rows; r++)
 			{
-				fprintf( f, "%1.5f ", vec[ r * cols + c ]);
+				fprintf( f, "%7.5f ", vec[ r * cols + c ]);
 			}
 			fprintf(f, "\n");
 		}
-		fprintf(f, "\n");
 	}
 	else
 	{
@@ -80,11 +79,10 @@ void printMatrix( FILE * f, int rows, int cols, double * vec, bool bTranspose )
 		{
 			for (int c = 0; c < cols; c++)
 			{
-				fprintf( f, "%1.5f ", vec[ r * cols + c ]);
+				fprintf( f, "%7.5f ", vec[ r * cols + c ]);
 			}
 			fprintf(f, "\n");
 		}
-		fprintf(f, "\n");
 	}
 }
 

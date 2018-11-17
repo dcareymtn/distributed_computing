@@ -8,6 +8,7 @@
 
 int main()
 {
+	double opt_limit = 5;
 	FILE *pFileX;
 	FILE *pFileY;
 	FILE *pFileZ;
@@ -16,8 +17,8 @@ int main()
 	pFileY 	= fopen( "Y.csv", "w");
 	pFileZ 	= fopen( "Z.csv", "w");
 
-	Matrix X = meshgrid( 2, -5.12,0.01,5.12);
-	Matrix Y = meshgrid( 1, -5.12,0.01,5.12);
+	Matrix X = meshgrid( 2, -opt_limit,0.1,opt_limit);
+	Matrix Y = meshgrid( 1, -opt_limit,0.1,opt_limit);
 
 	double (*f)(double, double);
 
@@ -32,16 +33,16 @@ int main()
 
 	double (*g)(int, double*);
 
-	int dim = 3;
-	g = &sum_of_the_squares;
+	int dim = 2;
+	//g = &sum_of_the_squares;
 	g = &rastrigin;
-	int numParticles = 100;
-	double pos_lower_bound = -10;
-	double pos_upper_bound = 10;
-	double a_1 = 0.1;
+	int numParticles = 40;
+	double pos_lower_bound = -opt_limit;
+	double pos_upper_bound = opt_limit;
+	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 0.2;
-	int max_iter 	= 1000;
+	int max_iter 	= 40;
 
 	particle_swarm_eval( 	g, 
 							dim, 
