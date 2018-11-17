@@ -8,7 +8,7 @@
 
 int main()
 {
-	double opt_limit = 15;
+	double opt_limit = 10;
 	FILE *pFileX;
 	FILE *pFileY;
 	FILE *pFileZ;
