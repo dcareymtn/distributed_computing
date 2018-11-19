@@ -272,9 +272,6 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 	
 	srand(time(NULL));
 
-	// Initialize the particles and their scoring
-	Matrix vel = Matrix::zeros( numParticles, dim);
-
 	double score_best 	= INFINITY;
 
 	int score_fac = bHighIsGood ? -1 : 1;

@@ -1,29 +1,29 @@
-Sender: LSF System <phpcadmin@gpu63>
-Subject: Job 122443: <homework4> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu65>
+Subject: Job 156351: <final_project> in cluster <phpc_cluster> Done
 
-Job <homework4> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <8*gpu63>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job <final_project> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <4*gpu65>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Tue Nov 13 22:09:37 2018
-Results reported at Tue Nov 13 22:09:46 2018
+Started at Sun Nov 18 23:05:45 2018
+Results reported at Sun Nov 18 23:05:46 2018
 
 Your job looked like:
 
 ------------------------------------------------------------
 # LSBATCH: User input
 #!/bin/bash
-#BSUB -n 8 # number of cores that we are requesting
+#BSUB -n 4 # number of cores that we are requesting
 #BSUB -o scripts/lsf.out # regular output file
 #BSUB -e scripts/lsf.err # stdeerr output file
 #BSUB -q "windfall" # out group -- don't change
-#BSUB -J homework4 # job name
+#BSUB -J final_project # job name
 #BSUB -R gpu
 
 rm ~/workspace/distributed_computing/scripts/lsf*
 module load cuda
 module load openmpi 
-time ~/workspace/distributed_computing/build/bin/homework4
+time ~/workspace/distributed_computing/build/bin/final_project
 
 ###end of script
 
@@ -33,21 +33,15 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               2.42 sec.
+    CPU time :               0.34 sec.
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
 
 The output (if any) follows:
 
-CUDA Initialization Took: 0.247713
- ------------- Part 2 ------------------
-Number Block = 256
-Number Threads = 324
-Global Compute Time: 0.00212831422686576843
-Shared Compute Time: 0.00189675763249397278
-Serial Compute Time: 0.30576469376683235168
-OMP    Compute Time: 0.11573385819792747498
+Num Swarms = 1; Num Particles = 50
+0.000000 2.000000 8.000000 18.000000 32.000000 50.000000 72.000000 98.000000 128.000000 162.000000 200.000000 242.000000 288.000000 338.000000 392.000000 450.000000 512.000000 578.000000 648.000000 722.000000 800.000000 882.000000 968.000000 1058.000000 1152.000000 1250.000000 1352.000000 1458.000000 1568.000000 1682.000000 1800.000000 1922.000000 2048.000000 2178.000000 2312.000000 2450.000000 2592.000000 2738.000000 2888.000000 3042.000000 3200.000000 3362.000000 3528.000000 3698.000000 3872.000000 4050.000000 4232.000000 4418.000000 4608.000000 4802.000000 
 
 
 PS:
