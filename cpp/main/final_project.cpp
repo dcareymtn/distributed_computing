@@ -38,13 +38,13 @@ int main()
 	int dim = 2;
 	g = &sum_of_the_squares;
 	//g = &rastrigin;
-	int numParticles = 50;
+	int numParticles = 8;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 0.2;
-	int max_iter 	= 50;
+	int max_iter 	= 4;
 	int numSwarms  = 1;
 	int numParticlesPerSwarm = numParticles;
 

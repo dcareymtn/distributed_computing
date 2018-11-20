@@ -10,6 +10,9 @@
 #include "util.hpp"
 #include "cmath_eval.h"
 
+#define MAX_DIM 2
+#define MAX_NUM_PARTICLES 1000
+
 namespace gpu
 {
 
@@ -156,9 +159,73 @@ __global__ void gpu_rms_filter_global( double * _d_M, int filtNRows, int filtNCo
 	*(_d_MResult + subMatIdx * blockSize + row * blockDim.y + col ) =  sqrt( this_result );
 }
 
-__global__ void max( const int num, double * _d_array_in, double *_d_array_out )
+// Test of a reduction
+__device__ void max_int( int dim, int * _s_map )
 {
-	// 		
+	unsigned int tid = threadIdx.x;
+	int left_value;
+	int right_value;
+
+	// Use the reduction tricks from CUDA reduction
+	for (unsigned int s = dim / 2; s > 0; s>>=1)
+	{
+		if (tid < s)
+		{
+			// Get the values using the map
+			left_value 	= _s_map[tid];
+			right_value	= _s_map[tid + s];
+
+			// If the score on the right is better than the left
+			if (right_value > left_value)
+			{
+
+				// The left one is better, so switch them
+				_s_map[tid] 	= right_value;
+				_s_map[tid + s] = left_value;
+
+			}
+		}
+
+		__syncthreads();
+
+	}
+}
+
+// Device Shared Memory min but only an ordering of the particles personal best
+__device__ void reduce_swarm( int numParticles, double * _s_array,  int * _s_map, int pb_score_idx )
+{
+	// Get the thread id (can only use this for shared memory
+	unsigned int pId = threadIdx.x;
+	unsigned int left_idx, right_idx;
+	double left_value, right_value;
+
+	// Use the reduction tricks from CUDA reduction
+	for (int s = numParticles / 2; s > 0; s>>=1)
+	{
+		if (pId < s)
+		{
+			// Get the values using the map
+			left_idx 	= _s_map[pId];
+			right_idx	= _s_map[pId + s];
+			left_value 	= _s_array[pb_score_idx + left_idx ];
+			right_value	= _s_array[pb_score_idx + right_idx];
+
+			// If the score on the right is better than the left
+			if ( right_value < left_value)
+			{
+
+				// The left one is better, so switch them
+				_s_map[pId] 	= right_idx;
+				_s_map[pId + s] = left_idx;
+
+			}
+		}
+
+		__syncthreads();
+
+	}
+
+
 }
 
 __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec), 
@@ -171,6 +238,7 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 {
 	
 	// Initialize some arrays
+	__shared__ int *smem_int;
 	__shared__ double *smem;
 
 	unsigned int numParticles 	= blockDim.x;
@@ -180,27 +248,30 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 	unsigned int pb_score_idx 	= pb_pos_idx + dim*numParticles;
 	unsigned int gb_pos_idx 	= pb_score_idx + numParticles;
 	unsigned int gb_score_idx 	= gb_pos_idx + dim;
+	
 	double current_score;
-	size_t smemsize = (gb_score_idx + 1) * sizeof(double);
-
 	double r_1, r_2;
+	size_t smemsize = (gb_score_idx + 1) * sizeof(double);
+	size_t smemintsize = numParticles * sizeof(int);
 
 	int tid = threadIdx.x + blockDim.x * blockIdx.x;
-	double dum[2];
-	dum[0]=tid;
-	dum[1]=tid;
-	_d_test[tid]= gpu_sum_of_the_squares( dim, &dum[0]);
-			
-	// Allocate shared memory for us on all threads
+	
+	unsigned int thread_map;
+		
+	// Allocate shared memory for use on all threads
 	if (threadIdx.x == 0)
 	{	
 		// current position (dim x numParticles), current velocity (dim x numParticles), then personal best position (dim x numParticles)
 		// plus personnal_best_score (numParticles) + global_best_pos (dim) + global_best_score (1)
 		smem 	= (double*)malloc(smemsize);
+		smem[gb_score_idx] = INFINITY;
+		smem_int = (int*)malloc(smemintsize);
 	}
-	
+		
 	__syncthreads();
 
+	smem_int[threadIdx.x]= threadIdx.x; // smem_int[threadIdx.x];
+	 
 	// Check for failure
 	if (smem == NULL)
 		return;
@@ -221,19 +292,47 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 	// Start the optimization
 	for (int iIter = 0; iIter < iterations; iIter++)
 	{
-		// Get the score of the current particle
-		current_score 	= gpu_sum_of_the_squares( dim, &data[c_pos_idx + threadIdx.x*dim]);
+
+		// Get the thread map
+		thread_map 		= smem_int[threadIdx.x];
 	
+		// Apply the stochastic motion
+		r_1 	= curand_uniform_double( &state[tid]);
+		r_2 	= curand_uniform_double( &state[tid]);
+		
+		// Apply the random motion to the terms	
+		// I AM HERE...need to add a1 and a2 etc.  then get these indexing terms correct
+		//for (int iDim = 0; iDim < dim; iDim++)
+		//{
+		//	idx 	= iParticle * dim + iDim;
+		//	
+		//	c_vel[idx] 	= c_vel[idx] +  a_1 * r_1 * (pb_pos[idx] - c_pos[idx]) + a_2 * r_2 * (gb_pos[iDim] - c_pos[idx]);
+		//	c_vel[idx] 	= c_vel[idx] * (fabs(c_vel[idx]) > max_vel ? max_vel/fabs(c_vel[idx]) : 1);
+		//	c_pos[idx] 	= c_pos[idx] + c_vel[idx];
+		//}
+		
+		// Get the score of the current particle
+		current_score 	= gpu_sum_of_the_squares( dim, &data[c_pos_idx + thread_map*dim]);
+
 		// Was this a personal best?
-		data[pb_pos_idx + threadIdx.x] = min( data[pb_pos_idx + threadIdx.x], current_score );
+		data[pb_score_idx + thread_map] = min( data[pb_score_idx + thread_map], current_score );
+		
+		// Sync the threads in order to confirm that all of the scores are complete
+		__syncthreads();
+
+		// Reduce the swarm
+		reduce_swarm( numParticles, smem, smem_int, pb_score_idx ); 
 
 		__syncthreads();
 
 	}
 
 	// Evaluate this thread's score at the initial position
+	// max_int( numParticles, smem_int );
 
-	// 
+	// Testing 
+	_d_test[threadIdx.x] 	= smem_int[threadIdx.x];
+	_d_test[threadIdx.x + numParticles] = data[pb_score_idx + threadIdx.x];
 
 }
 
@@ -395,10 +494,10 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 	cudaMalloc((void **)&_d_state, numParticlesPerSwarm * numSwarms* sizeof(curandState));
 
 	// Create memory for testing on host and device;
-	double *_h_test =  (double *) malloc(numParticlesPerSwarm * numSwarms * sizeof(double));
+	double *_h_test =  (double *) malloc(numParticlesPerSwarm * numSwarms*2 * sizeof(double));
 	
 	double *_d_test; 
-	cudaMalloc((void **)&_d_test, numParticlesPerSwarm * numSwarms * sizeof(double));
+	cudaMalloc((void **)&_d_test, numParticlesPerSwarm * 2 * sizeof(double));
 		
 	// Set up the kernel for number generation on each particle
 	setup_kernel<<< numSwarms, numParticlesPerSwarm >>>(time(NULL), _d_state);
@@ -413,131 +512,18 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 																	_d_test );
 	
 	// Copy the test
-	cudaMemcpy( _h_test, _d_test, (numParticlesPerSwarm*numSwarms * sizeof(double)), cudaMemcpyDeviceToHost );
+	cudaMemcpy( _h_test, _d_test, (numParticlesPerSwarm*numSwarms*2 * sizeof(double)), cudaMemcpyDeviceToHost );
 	
-	for (int i = 0; i < numParticlesPerSwarm*numSwarms; i++)
+	for (int i = 0; i < numParticlesPerSwarm*2; i++)
 	{
-		printf("%f ", _h_test[i]);
+		printf("%1.2f ", _h_test[i]);
 	}
 	printf("\n");
 		
-	cudaFree(_d_state);	
+	cudaFree(_d_state);
+	cudaFree(_d_test);	
 	free(_h_test);
 		
-	// OLD CODE STARTS HERE
-
-	//srand(time(NULL));
-	//
-	//int score_fac = bHighIsGood ? -1 : 1;
-	//
-	//// Using the current position of the particles (from pos_vec_array), compute the score at each particle
-	//// Using the current position of the particles (from pos_vec_array), Update the Personal best for each particle
-	//double *c_pos 		= (double *)malloc( dim * numParticles * sizeof(double));
-	//double *c_vel 		= (double *)malloc( dim * numParticles * sizeof(double));
-	//double *pb_pos 		= (double *)malloc( dim * numParticles * sizeof(double));
-	//double *pb_score 	= (double *)malloc( numParticles * sizeof(double));
-	//double *gb_pos 		= (double *)malloc( dim * sizeof( double ));
-	//double r_1;
-	//double r_2;
-	//double gb_score 	= INFINITY;
-	//double this_score = 0;
-	//int idx 	= 0;
-
-	//FILE * fParticles;
-	//FILE * fScore;
-	//
-	//fParticles 	= fopen( "particles.csv", "w");
-	//fScore 		= fopen( "score.csv", "w");
-	//
-	//// Initialize scoreing
-	//	for (int iParticle = 0; iParticle < numParticles; iParticle++)
-	//	{
-	//		pb_score[iParticle] 	= INFINITY;
-	//		for (int iDim = 0; iDim < dim; iDim++)
-	//		{
-	//			c_pos[iParticle * dim + iDim] 	= unifrand( pos_lower_bound, pos_upper_bound ); 
-	//			c_vel[iParticle * dim + iDim] 	= 0;
-	//			pb_pos[iParticle * dim + iDim] 	= c_pos[iParticle * dim + iDim];
-	//		}
-	//	}
-
-	//// Start the optimization
-	//	for (int iter = 0; iter < max_iter; iter++)
-	//	{
-	//		printf("--------------------------------------------\n");
-	//		printf("            Iteration %d   \n", iter);
-	//		printf("--------------------------------------------\n");
-
-	//		for (int iParticle = 0; iParticle < numParticles; iParticle++)
-	//		{
-	//			this_score = score_fac * feval_c( f, dim, &c_pos[iParticle * dim] );
-	//			pb_score[iParticle] = min( pb_score[iParticle], this_score );
-	//		}
-
-	//		printf("Current Position\n");	
-	//		printMatrix( stdout, numParticles, dim, c_pos, true );
-	//		printMatrix( fParticles, numParticles, dim, c_pos, true );
-	//		printf("Current Velocity\n"    );
-	//		printMatrix( stdout, numParticles, dim, c_vel, true );
-	//		printf("Personal Best Position\n"    );
-	//		printMatrix( stdout, numParticles, dim, pb_pos, true );
-	//		printf("Personal Best Score\n");
-	//		printMatrix( stdout, 1, numParticles, pb_score );
-	//		printMatrix( fParticles, 1, numParticles, pb_score );
-	//		
-	//		// Of all the particles, do a maximum reduction on global data to find the global max
-	//		for (int iParticle = 0; iParticle < numParticles; iParticle++)
-	//		{
-	//			if (pb_score[iParticle] < gb_score)
-	//			{
-	//				gb_score 	= min( pb_score[iParticle], gb_score);
-	//				for (int iDim = 0; iDim < dim; iDim++)
-	//				{
-	//					gb_pos[iDim] 	= c_pos[iParticle * dim + iDim];
-	//				}
-	//			}
-	//		}
-
-	//		fprintf( stdout, "global score = %f\n", gb_score);
-	//		fprintf( fScore, "%f\n");
-	//		printf("Global Best Position\n");
-	//		printMatrix( stdout, dim, 1, gb_pos );	
-
-	//		// Randomly generate the two random vectors [0,1]
-	//		// Move the particles and update the positions	
-	//		
-	//		for (int iParticle = 0; iParticle < numParticles; iParticle++)
-	//		{
-	//			r_1 	= unifrand(0.0,1.0);
-	//			r_2 	= unifrand(0.0,1.0);
-	//
-	//			for (int iDim = 0; iDim < dim; iDim++)
-	//			{
-	//				idx 	= iParticle * dim + iDim;
-	//				
-	//				c_vel[idx] 	= c_vel[idx] +  a_1 * r_1 * (pb_pos[idx] - c_pos[idx]) + a_2 * r_2 * (gb_pos[iDim] - c_pos[idx]);
-	//				c_vel[idx] 	= c_vel[idx] * (fabs(c_vel[idx]) > max_vel ? max_vel/fabs(c_vel[idx]) : 1);
-	//				c_pos[idx] 	= c_pos[idx] + c_vel[idx];
-	//			}
-
-	//		}
-
-	//	}
-
-
-
-	//// Compute the convergence metric
-
-	//// If done, then exit
-
-	//// Else, repeat up to max num times
-	//
-	//free(c_pos);
-	//free(c_vel);
-	//free(pb_pos);
-	//free(pb_score);
-	//free(gb_pos);
-
 }// End GPU Name space
 
 }
