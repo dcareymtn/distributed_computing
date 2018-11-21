@@ -234,6 +234,7 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 										const double pos_lower_bound, 
 										const double pos_upper_bound, 
 										int iterations,
+										double a_1, double a_2,
 										double *_d_test )
 {
 	
@@ -268,6 +269,13 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		smem_int = (int*)malloc(smemintsize);
 	}
 		
+	double *pCurPos 	= smem + c_pos_idx;
+	double *pCurVel 	= smem + c_vel_idx;
+	double *pPbPos 		= smem + pb_pos_idx;
+	double *pPbScore 	= smem + pb_score_idx;
+	double *pGbPos		= smem + gb_pos_idx;
+	double *pGbScore 	= smem + gb_score_idx;
+	
 	__syncthreads();
 
 	smem_int[threadIdx.x]= threadIdx.x; // smem_int[threadIdx.x];
@@ -301,6 +309,13 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		r_2 	= curand_uniform_double( &state[tid]);
 		
 		// Apply the random motion to the terms	
+		for (int iDim = 0; iDim < dim; iDim++)
+		{
+			data[c_vel_idx + iDim*numParticles + thread_map]  = data[c_vel_idx + iDim*numParticles + thread_map] +
+				a_1 * r_1 * (data[pb_pos_idx + iDim*numParticles + thread_map] - data[c_pos_idx + iDim*numParticles + thread_map]) +
+				a_2 * r_2 * (data[gb_pos_idx + iDim] - data[c_pos_idx + iDim*numParticles + thread_map]);
+		}
+		
 		// I AM HERE...need to add a1 and a2 etc.  then get these indexing terms correct
 		//for (int iDim = 0; iDim < dim; iDim++)
 		//{
@@ -509,6 +524,7 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 																	_d_state, 
 																	pos_lower_bound, pos_upper_bound, 
 																	iterations,
+																	a_1, a_2,
 																	_d_test );
 	
 	// Copy the test

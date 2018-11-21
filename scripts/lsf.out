@@ -1,12 +1,12 @@
-Sender: LSF System <phpcadmin@gpu35>
-Subject: Job 157253: <final_project> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu48>
+Subject: Job 157566: <final_project> in cluster <phpc_cluster> Done
 
 Job <final_project> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <4*gpu35>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <4*gpu48>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Mon Nov 19 23:32:49 2018
-Results reported at Mon Nov 19 23:32:49 2018
+Started at Tue Nov 20 20:46:24 2018
+Results reported at Tue Nov 20 20:46:24 2018
 
 Your job looked like:
 
@@ -33,7 +33,7 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               0.38 sec.
+    CPU time :               0.40 sec.
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
@@ -41,7 +41,7 @@ Resource usage summary:
 The output (if any) follows:
 
 Num Swarms = 1; Num Particles = 8
-2.00 7.00 4.00 3.00 0.00 5.00 6.00 1.00 35.68 27.92 5.90 17.38 26.78 28.14 38.90 9.17 
+0.00 7.00 2.00 3.00 4.00 5.00 6.00 1.00 4.18 29.55 13.97 21.72 15.32 31.61 44.50 4.37 
 
 
 PS:
