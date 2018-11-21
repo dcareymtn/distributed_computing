@@ -317,7 +317,24 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 			for (int iParticle = 0; iParticle < numParticles; iParticle++)
 			{
 				this_score = score_fac * feval_c( f, dim, &c_pos[iParticle * dim] );
-				pb_score[iParticle] = min( pb_score[iParticle], this_score );
+				
+				if (this_score < pb_score[iParticle])
+				{
+					// Update the personal best score
+					pb_score[iParticle] = this_score;
+					
+					// Also update the personal best position
+					for (int iDim = 0; iDim < dim; iDim++)
+					{
+						pb_pos[iParticle * dim + iDim] 	= c_pos[iParticle * dim + iDim];
+					}
+
+				}
+				else
+				{
+
+				}
+
 			}
 
 			printf("Current Position\n");	

@@ -191,7 +191,7 @@ __device__ void max_int( int dim, int * _s_map )
 	}
 }
 
-// Device Shared Memory min but only an ordering of the particles personal best
+// Device Shared Memory min but only an ordering of the particles personal best to get the max
 __device__ void reduce_swarm( int numParticles, double * _s_array,  int * _s_map, int pb_score_idx )
 {
 	// Get the thread id (can only use this for shared memory
@@ -292,9 +292,10 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 	
 	for (int iDim = 0; iDim < dim; iDim++)
 	{
-		data[c_pos_idx + iDim*numParticles + threadIdx.x] = (curand_uniform_double( &state[tid] ) * (pos_upper_bound - pos_lower_bound)) + pos_lower_bound;
-		data[c_vel_idx + iDim*numParticles + threadIdx.x] = 0; 
-		data[pb_pos_idx + iDim*numParticles + threadIdx.x] = data[c_pos_idx + iDim*numParticles + threadIdx.x];
+		thread_map 	= smem_int[threadIdx.x];
+		pCurPos[ thread_map * dim + iDim] = (curand_uniform_double( &state[tid] ) * (pos_upper_bound - pos_lower_bound)) + pos_lower_bound;
+		pCurVel[ thread_map * dim + iDim] = 0;
+		pPbPos[ thread_map * dim + iDim ] = pPbPos[ thread_map * dim + iDim];	
 	}
 
 	// Start the optimization
@@ -304,6 +305,16 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		// Get the thread map
 		thread_map 		= smem_int[threadIdx.x];
 	
+		// Get the score of the current particle and was it a personal best
+		current_score 	= gpu_sum_of_the_squares( dim, &data[c_pos_idx + thread_map*dim]);
+		pPbScore[thread_map] = min( pPbScore[thread_map], current_score );
+		
+		// Sync the threads in order to confirm that all of the scores are complete
+		__syncthreads();
+
+		// Reduce the swarm
+		reduce_swarm( numParticles, smem, smem_int, pb_score_idx ); 
+		
 		// Apply the stochastic motion
 		r_1 	= curand_uniform_double( &state[tid]);
 		r_2 	= curand_uniform_double( &state[tid]);
@@ -326,17 +337,11 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		//	c_pos[idx] 	= c_pos[idx] + c_vel[idx];
 		//}
 		
-		// Get the score of the current particle
-		current_score 	= gpu_sum_of_the_squares( dim, &data[c_pos_idx + thread_map*dim]);
 
-		// Was this a personal best?
-		data[pb_score_idx + thread_map] = min( data[pb_score_idx + thread_map], current_score );
+
+
 		
-		// Sync the threads in order to confirm that all of the scores are complete
-		__syncthreads();
 
-		// Reduce the swarm
-		reduce_swarm( numParticles, smem, smem_int, pb_score_idx ); 
 
 		__syncthreads();
 

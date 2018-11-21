@@ -38,36 +38,36 @@ int main()
 	int dim = 2;
 	g = &sum_of_the_squares;
 	//g = &rastrigin;
-	int numParticles = 8;
+	int numParticles = 64;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 0.2;
-	int max_iter 	= 4;
+	int max_iter 	= 30;
 	int numSwarms  = 1;
 	int numParticlesPerSwarm = numParticles;
 
-	gpu::particle_swarm_eval( 	g,  
-								dim, 
-								numSwarms, 
-								numParticlesPerSwarm,
-								pos_lower_bound,
-								pos_upper_bound,
-								a_1, a_2,
-								max_vel,
-								max_iter, 
-								false); 
+//	gpu::particle_swarm_eval( 	g,  
+//								dim, 
+//								numSwarms, 
+//								numParticlesPerSwarm,
+//								pos_lower_bound,
+//								pos_upper_bound,
+//								a_1, a_2,
+//								max_vel,
+//								max_iter, 
+//								false); 
 
-	//particle_swarm_eval( 	g, 
-	//						dim, 
-	//						numParticles, 
-	//						pos_lower_bound,
-	//						pos_upper_bound,
-	//						a_1, a_2,
-	//						max_vel,
-	//						max_iter, 
-	//						false); 
+	particle_swarm_eval( 	g, 
+							dim, 
+							numParticles, 
+							pos_lower_bound,
+							pos_upper_bound,
+							a_1, a_2,
+							max_vel,
+							max_iter, 
+							false); 
 	
 	return 0;
 }
