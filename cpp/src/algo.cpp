@@ -330,10 +330,6 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 					}
 
 				}
-				else
-				{
-
-				}
 
 			}
 
@@ -381,6 +377,7 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 					c_vel[idx] 	= c_vel[idx] +  a_1 * r_1 * (pb_pos[idx] - c_pos[idx]) + a_2 * r_2 * (gb_pos[iDim] - c_pos[idx]);
 					c_vel[idx] 	= c_vel[idx] * (fabs(c_vel[idx]) > max_vel ? max_vel/fabs(c_vel[idx]) : 1);
 					c_pos[idx] 	= c_pos[idx] + c_vel[idx];
+
 				}
 
 			}

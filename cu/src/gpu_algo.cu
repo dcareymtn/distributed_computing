@@ -228,13 +228,14 @@ __device__ void reduce_swarm( int numParticles, double * _s_array,  int * _s_map
 
 }
 
-__global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec), 
-										const int dim,
+__global__ void gpu_particle_swarm_opt( const int dim,
 										curandState *state,  
 										const double pos_lower_bound, 
 										const double pos_upper_bound, 
 										int iterations,
 										double a_1, double a_2,
+										double max_vel,
+										double *_d_results,
 										double *_d_test )
 {
 	
@@ -256,6 +257,7 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 	size_t smemintsize = numParticles * sizeof(int);
 
 	int tid = threadIdx.x + blockDim.x * blockIdx.x;
+	int idx; // tempory idx
 	
 	unsigned int thread_map;
 		
@@ -306,15 +308,36 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		thread_map 		= smem_int[threadIdx.x];
 	
 		// Get the score of the current particle and was it a personal best
-		current_score 	= gpu_sum_of_the_squares( dim, &data[c_pos_idx + thread_map*dim]);
-		pPbScore[thread_map] = min( pPbScore[thread_map], current_score );
+		current_score 	= gpu_sum_of_the_squares( dim, &pCurPos[thread_map*dim]);
+
+		if (current_score < pPbScore[thread_map])
+		{
+			pPbScore[thread_map] = current_score;
+
+			for (int iDim = 0; iDim < dim; iDim++)
+			{
+				pPbPos[ thread_map * dim + iDim] = pCurPos[ thread_map * dim + iDim];
+			}
+		}
 		
 		// Sync the threads in order to confirm that all of the scores are complete
 		__syncthreads();
 
 		// Reduce the swarm
 		reduce_swarm( numParticles, smem, smem_int, pb_score_idx ); 
+	
+		// The best personal best is the best
+		if (threadIdx.x == 0)
+		{
+			pGbScore[0] = pPbScore[smem_int[0]];
+			for (int iDim = 0; iDim < dim; iDim++)
+			{
+				pGbPos[iDim] = pPbPos[smem_int[0]*dim + iDim];
+			}
+		}
 		
+		__syncthreads();
+
 		// Apply the stochastic motion
 		r_1 	= curand_uniform_double( &state[tid]);
 		r_2 	= curand_uniform_double( &state[tid]);
@@ -322,33 +345,28 @@ __global__ void gpu_particle_swarm_opt( double (*f)(int dim, double * vec),
 		// Apply the random motion to the terms	
 		for (int iDim = 0; iDim < dim; iDim++)
 		{
-			data[c_vel_idx + iDim*numParticles + thread_map]  = data[c_vel_idx + iDim*numParticles + thread_map] +
-				a_1 * r_1 * (data[pb_pos_idx + iDim*numParticles + thread_map] - data[c_pos_idx + iDim*numParticles + thread_map]) +
-				a_2 * r_2 * (data[gb_pos_idx + iDim] - data[c_pos_idx + iDim*numParticles + thread_map]);
+
+			idx 	= smem_int[threadIdx.x] * dim + iDim;
+			
+			pCurVel[idx] = pCurVel[idx] + a_1 * r_1 * pPbPos[idx] - pCurPos[idx] + a_2 * r_2 * (pGbPos[iDim] - pCurPos[idx]);
+			pCurVel[idx] = pCurVel[idx] * (fabs(pCurVel[idx]) > max_vel ? max_vel/fabs(pCurVel[idx]) : 1);
+			pCurPos[idx] = pCurPos[idx] + pCurVel[idx];
+			
 		}
 		
-		// I AM HERE...need to add a1 and a2 etc.  then get these indexing terms correct
-		//for (int iDim = 0; iDim < dim; iDim++)
-		//{
-		//	idx 	= iParticle * dim + iDim;
-		//	
-		//	c_vel[idx] 	= c_vel[idx] +  a_1 * r_1 * (pb_pos[idx] - c_pos[idx]) + a_2 * r_2 * (gb_pos[iDim] - c_pos[idx]);
-		//	c_vel[idx] 	= c_vel[idx] * (fabs(c_vel[idx]) > max_vel ? max_vel/fabs(c_vel[idx]) : 1);
-		//	c_pos[idx] 	= c_pos[idx] + c_vel[idx];
-		//}
-		
-
-
-
-		
-
-
 		__syncthreads();
 
 	}
 
-	// Evaluate this thread's score at the initial position
-	// max_int( numParticles, smem_int );
+	// Write the result
+	if (threadIdx.x == 0)
+	{
+		_d_results[0] = pGbScore[0];
+		for (int iDim = 0; iDim < dim; iDim++)
+		{
+			_d_results[iDim + 1] = pGbPos[iDim];
+		}
+	}
 
 	// Testing 
 	_d_test[threadIdx.x] 	= smem_int[threadIdx.x];
@@ -497,8 +515,7 @@ void hello_cuda(void)
 }
 
 
-void particle_swarm_eval( double (*f)(int dim, double * vec), 
-							int dim,
+void particle_swarm_eval( 	int dim,
 							int numSwarms,  
 							int numParticlesPerSwarm,
 							double pos_lower_bound,
@@ -515,6 +532,12 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 
 	// Create memory for testing on host and device;
 	double *_h_test =  (double *) malloc(numParticlesPerSwarm * numSwarms*2 * sizeof(double));
+
+	// Create memory for the result
+	double *_h_result = (double *) malloc( (dim + 1) * sizeof(double));
+
+	double * _d_result;
+	cudaMalloc((void **)&_d_result, (dim+1) * sizeof(double));
 	
 	double *_d_test; 
 	cudaMalloc((void **)&_d_test, numParticlesPerSwarm * 2 * sizeof(double));
@@ -524,25 +547,38 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 	
 	// Call the kernel test
 	printf("Num Swarms = %d; Num Particles = %d\n", numSwarms, numParticlesPerSwarm);
-	gpu_particle_swarm_opt<<< numSwarms, numParticlesPerSwarm >>>(	f,
-																	dim,
+	gpu_particle_swarm_opt<<< numSwarms, numParticlesPerSwarm >>>(	dim,
 																	_d_state, 
 																	pos_lower_bound, pos_upper_bound, 
 																	iterations,
 																	a_1, a_2,
+																	max_vel,
+																	_d_result,
 																	_d_test );
+	
+	// Copy the result
+	cudaMemcpy( _h_result, _d_result, (dim + 1) * sizeof(double), cudaMemcpyDeviceToHost );
 	
 	// Copy the test
 	cudaMemcpy( _h_test, _d_test, (numParticlesPerSwarm*numSwarms*2 * sizeof(double)), cudaMemcpyDeviceToHost );
 	
-	for (int i = 0; i < numParticlesPerSwarm*2; i++)
+	for (int i = 0; i < numParticlesPerSwarm; i++)
 	{
-		printf("%1.2f ", _h_test[i]);
+		printf("%1.2f %1.10f\n", _h_test[i], _h_test[i+numParticlesPerSwarm]);
+	}
+	printf("\n");
+	
+	printf("Result Score: %1.10f\n", _h_result[0]);
+	for (int i = 0; i<dim; i++)
+	{
+		printf("%1.10f ", _h_result[i+1]);
 	}
 	printf("\n");
 		
 	cudaFree(_d_state);
-	cudaFree(_d_test);	
+	cudaFree(_d_test);
+	cudaFree(_d_result);	
+	free(_h_result);
 	free(_h_test);
 		
 }// End GPU Name space

@@ -12,8 +12,7 @@ void count_occurrences( double *h_M, int nRows, int nCols, int start_count, int 
 
 void rms_filter( double *hBlockMResult, double *_h_BlockM, int nRowBreak, int nColBreak, int subMatNumRows, int subMatNumCols, int filtNRows, int filtNCols, bool bGlobal ); 
 
-void particle_swarm_eval( double (*f)(int dim, double * vec), 
-							int dim,
+void particle_swarm_eval( 	int dim,
 							int numSwarms, 
 							int numParticlesPerSwarm, 
 							double pos_lower_bound,
