@@ -259,7 +259,7 @@ Matrix RMS_filter2_par_mpi( const Matrix & M, int nPar, int filtNRows, int filtN
 }
 
 
-void particle_swarm_eval( double (*f)(int dim, double * vec), 
+void particle_swarm_eval( 	double (*f)(int dim, double * vec), 
 							int dim, 
 							int numParticles,
 							double pos_lower_bound,
@@ -267,7 +267,10 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 							double a_1, double a_2,
 							double max_vel,
 							int max_iter, 
-							bool bHighIsGood )
+							double &score,
+							double *x_hat,
+							bool bHighIsGood)
+
 {
 	
 	srand(time(NULL));
@@ -310,9 +313,9 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 	// Start the optimization
 		for (int iter = 0; iter < max_iter; iter++)
 		{
-			printf("--------------------------------------------\n");
-			printf("            Iteration %d   \n", iter);
-			printf("--------------------------------------------\n");
+//			printf("--------------------------------------------\n");
+//			printf("            Iteration %d   \n", iter);
+//			printf("--------------------------------------------\n");
 
 			for (int iParticle = 0; iParticle < numParticles; iParticle++)
 			{
@@ -333,16 +336,16 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 
 			}
 
-			printf("Current Position\n");	
-			printMatrix( stdout, numParticles, dim, c_pos, true );
-			printMatrix( fParticles, numParticles, dim, c_pos, true );
-			printf("Current Velocity\n"    );
-			printMatrix( stdout, numParticles, dim, c_vel, true );
-			printf("Personal Best Position\n"    );
-			printMatrix( stdout, numParticles, dim, pb_pos, true );
-			printf("Personal Best Score\n");
-			printMatrix( stdout, 1, numParticles, pb_score );
-			printMatrix( fParticles, 1, numParticles, pb_score );
+//			printf("Current Position\n");	
+//			printMatrix( stdout, numParticles, dim, c_pos, true );
+//			printMatrix( fParticles, numParticles, dim, c_pos, true );
+//			printf("Current Velocity\n"    );
+//			printMatrix( stdout, numParticles, dim, c_vel, true );
+//			printf("Personal Best Position\n"    );
+//			printMatrix( stdout, numParticles, dim, pb_pos, true );
+//			printf("Personal Best Score\n");
+//			printMatrix( stdout, 1, numParticles, pb_score );
+//			printMatrix( fParticles, 1, numParticles, pb_score );
 			
 			// Of all the particles, do a maximum reduction on global data to find the global max
 			for (int iParticle = 0; iParticle < numParticles; iParticle++)
@@ -357,10 +360,10 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 				}
 			}
 
-			fprintf( stdout, "global score = %f\n", gb_score);
-			fprintf( fScore, "%f\n");
-			printf("Global Best Position\n");
-			printMatrix( stdout, dim, 1, gb_pos );	
+//			fprintf( stdout, "global score = %f\n", gb_score);
+//			fprintf( fScore, "%f\n");
+//			printf("Global Best Position\n");
+//			printMatrix( stdout, dim, 1, gb_pos );	
 
 			// Randomly generate the two random vectors [0,1]
 			// Move the particles and update the positions	
@@ -383,15 +386,14 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 			}
 
 		}
-
-
-
-	// Compute the convergence metric
-
-	// If done, then exit
-
-	// Else, repeat up to max num times
 	
+	score = gb_score;
+
+	for (int iDim = 0; iDim < dim; iDim++)
+	{
+		x_hat[iDim] = gb_pos[iDim];
+	}
+
 	free(c_pos);
 	free(c_vel);
 	free(pb_pos);

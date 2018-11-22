@@ -24,6 +24,8 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 							double pos_upper_bound,
 							double a_1, double a_2,
 							double max_vel, int max_iter, 
-							bool bHighIsGood = false); 
+							double &score,
+							double *x_hat, 
+							bool bHighIsGood = false);
 
 #endif

@@ -1,12 +1,12 @@
-Sender: LSF System <phpcadmin@gpu54>
-Subject: Job 157616: <final_project> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu35>
+Subject: Job 157721: <final_project> in cluster <phpc_cluster> Done
 
 Job <final_project> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <4*gpu54>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <4*gpu35>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Tue Nov 20 22:21:56 2018
-Results reported at Tue Nov 20 22:21:57 2018
+Started at Wed Nov 21 06:53:00 2018
+Results reported at Wed Nov 21 06:53:01 2018
 
 Your job looked like:
 
@@ -33,81 +33,24 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               0.41 sec.
+    CPU time :               0.64 sec.
+    Max Memory :             1 MB
+    Average Memory :         1.00 MB
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
+    Max Swap :               227 MB
+
+    Max Processes :          4
+    Max Threads :            4
 
 The output (if any) follows:
 
-Num Swarms = 1; Num Particles = 64
-25.00 0.0285256015
-37.00 0.0565674346
-2.00 0.0072593689
-29.00 1.4405579708
-8.00 0.0001310644
-15.00 0.1007409383
-14.00 0.1391157734
-27.00 0.1163258261
-4.00 0.0003182441
-9.00 0.0023156361
-42.00 0.4440119474
-43.00 0.0906290397
-44.00 0.0266303952
-45.00 0.0594610297
-30.00 0.0108820577
-63.00 0.0016671383
-16.00 0.4425858523
-1.00 0.1958534304
-18.00 0.1231454608
-19.00 0.0162069389
-20.00 0.3574854155
-21.00 0.1943839255
-22.00 0.0127492729
-23.00 0.0306254119
-56.00 0.2062856278
-49.00 0.0000012866
-26.00 0.0518356909
-59.00 0.0278503808
-28.00 0.8596232277
-12.00 0.0032448116
-50.00 0.0359478412
-31.00 0.0857142339
-32.00 0.0055338015
-33.00 0.0935903566
-62.00 0.5575914752
-35.00 0.0275023672
-36.00 0.8646438038
-5.00 0.0008036750
-6.00 0.7085487034
-7.00 0.1837215214
-40.00 0.0176812705
-41.00 1.3689919931
-10.00 0.0213397612
-11.00 0.0776225417
-0.00 0.0028318490
-61.00 0.0158044980
-38.00 0.1568010414
-39.00 0.5458942737
-48.00 2.9697293770
-17.00 0.0135798429
-34.00 0.0760938957
-3.00 0.2519506145
-52.00 1.0392151075
-53.00 1.0754432598
-54.00 0.5880886981
-55.00 0.2615408642
-24.00 0.0053803300
-57.00 0.0549775211
-58.00 0.0824767213
-51.00 0.0875111072
-60.00 0.9355524310
-13.00 0.0299249653
-46.00 0.0228897525
-47.00 0.0579843811
-
-Result Score: 0.0000012866
--0.0005850185 0.0009717939 
+Num Swarms = 2; Num Particles = 512
+Result Score: 0.0000000000
+0.0000000000 0.0000000000 
+GPU Time: 0.1140341647
+Serial Time: 0.0117392503
 
 
 PS:

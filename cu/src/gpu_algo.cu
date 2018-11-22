@@ -562,12 +562,6 @@ void particle_swarm_eval( 	int dim,
 	// Copy the test
 	cudaMemcpy( _h_test, _d_test, (numParticlesPerSwarm*numSwarms*2 * sizeof(double)), cudaMemcpyDeviceToHost );
 	
-	for (int i = 0; i < numParticlesPerSwarm; i++)
-	{
-		printf("%1.2f %1.10f\n", _h_test[i], _h_test[i+numParticlesPerSwarm]);
-	}
-	printf("\n");
-	
 	printf("Result Score: %1.10f\n", _h_result[0]);
 	for (int i = 0; i<dim; i++)
 	{
