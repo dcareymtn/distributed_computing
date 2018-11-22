@@ -18,7 +18,9 @@ void particle_swarm_eval( 	int dim,
 							double pos_lower_bound,
 							double pos_upper_bound,
 							double a_1, double a_2,
-							double max_vel, int max_iter, 
+							double max_vel, int max_iter,
+							double &result_score,
+							double *result_vec, 
 							bool bHighIsGood = false); 
 
 }

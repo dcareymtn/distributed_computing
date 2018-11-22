@@ -36,17 +36,17 @@ int main()
 
 	double (*g)(int, double*);
 
-	int dim = 2;
+	int dim = 3;
 	g = &sum_of_the_squares;
 	//g = &rastrigin;
-	int numParticles = 512;
+	int numParticles = 128;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 10000000000;
-	int max_iter 	= 100;
-	int numSwarms  = 2;
+	int max_iter 	= 1000;
+	int numSwarms  = 400;
 	int numParticlesPerSwarm = numParticles;
 	double score1, score2;
 	double x_hat1[10], x_hat2[10];
@@ -63,7 +63,10 @@ int main()
 								a_1, a_2,
 								max_vel,
 								max_iter, 
+								score1,
+								&x_hat1[0],
 								false);
+
 	stop_s = omp_get_wtime();
 	printf("GPU Time: %1.10f\n", stop_s - start_s);
 

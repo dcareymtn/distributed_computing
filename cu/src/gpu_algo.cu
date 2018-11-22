@@ -22,7 +22,7 @@ __device__ double gpu_sum_of_the_squares( int dim, double * vec)
 	
 	for (int i = 0; i < dim; i++)
 	{
-		res += vec[i]*vec[i];
+		res += (vec[i]-0.5)*(vec[i]-0.5);
 	}
 	
 	return res;
@@ -260,7 +260,6 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 	int idx; // tempory idx
 	
 	unsigned int thread_map;
-		
 	// Allocate shared memory for use on all threads
 	if (threadIdx.x == 0)
 	{	
@@ -270,16 +269,8 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 		smem[gb_score_idx] = INFINITY;
 		smem_int = (int*)malloc(smemintsize);
 	}
-		
-	double *pCurPos 	= smem + c_pos_idx;
-	double *pCurVel 	= smem + c_vel_idx;
-	double *pPbPos 		= smem + pb_pos_idx;
-	double *pPbScore 	= smem + pb_score_idx;
-	double *pGbPos		= smem + gb_pos_idx;
-	double *pGbScore 	= smem + gb_score_idx;
 	
-	__syncthreads();
-
+	__syncthreads(); // sync to ensure shared memory
 	smem_int[threadIdx.x]= threadIdx.x; // smem_int[threadIdx.x];
 	 
 	// Check for failure
@@ -288,6 +279,14 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 	
 	// Make a pointer for each thread
 	double *data = smem;
+	int *hash = smem_int;
+	
+	double *pCurPos 	= smem + c_pos_idx;
+	double *pCurVel 	= smem + c_vel_idx;
+	double *pPbPos 		= smem + pb_pos_idx;
+	double *pPbScore 	= smem + pb_score_idx;
+	double *pGbPos		= smem + gb_pos_idx;
+	double *pGbScore 	= smem + gb_score_idx;
 	
 	// Initialize the swarm
 	data[pb_score_idx + threadIdx.x] = INFINITY;
@@ -299,17 +298,17 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 		pCurVel[ thread_map * dim + iDim] = 0;
 		pPbPos[ thread_map * dim + iDim ] = pPbPos[ thread_map * dim + iDim];	
 	}
-
+	
 	// Start the optimization
 	for (int iIter = 0; iIter < iterations; iIter++)
 	{
 
 		// Get the thread map
-		thread_map 		= smem_int[threadIdx.x];
-	
+		thread_map 		= hash[threadIdx.x];
+		
 		// Get the score of the current particle and was it a personal best
 		current_score 	= gpu_sum_of_the_squares( dim, &pCurPos[thread_map*dim]);
-
+		
 		if (current_score < pPbScore[thread_map])
 		{
 			pPbScore[thread_map] = current_score;
@@ -319,7 +318,8 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 				pPbPos[ thread_map * dim + iDim] = pCurPos[ thread_map * dim + iDim];
 			}
 		}
-		
+		//The IF STATEMENT ABOVE IS SLOW	
+			
 		// Sync the threads in order to confirm that all of the scores are complete
 		__syncthreads();
 
@@ -349,7 +349,8 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 			idx 	= smem_int[threadIdx.x] * dim + iDim;
 			
 			pCurVel[idx] = pCurVel[idx] + a_1 * r_1 * pPbPos[idx] - pCurPos[idx] + a_2 * r_2 * (pGbPos[iDim] - pCurPos[idx]);
-			pCurVel[idx] = pCurVel[idx] * (fabs(pCurVel[idx]) > max_vel ? max_vel/fabs(pCurVel[idx]) : 1);
+			//pCurVel[idx] = pCurVel[idx] * (fabs(pCurVel[idx]) > max_vel ? max_vel/fabs(pCurVel[idx]) : 1);
+			pCurVel[idx] = pCurVel[idx] * (1);
 			pCurPos[idx] = pCurPos[idx] + pCurVel[idx];
 			
 		}
@@ -361,10 +362,10 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 	// Write the result
 	if (threadIdx.x == 0)
 	{
-		_d_results[0] = pGbScore[0];
+		_d_results[blockIdx.x*(dim+1)] = pGbScore[0];
 		for (int iDim = 0; iDim < dim; iDim++)
 		{
-			_d_results[iDim + 1] = pGbPos[iDim];
+			_d_results[(blockIdx.x*(dim+1)) + iDim + 1] = pGbPos[iDim];
 		}
 	}
 
@@ -522,7 +523,9 @@ void particle_swarm_eval( 	int dim,
 							double pos_upper_bound, 
 							double a_1, double a_2,
 							double max_vel,
-							int iterations, 
+							int iterations,
+							double &result_score,
+							double *result_vec, 
 							bool bHighIsGood )
 {
 
@@ -534,19 +537,25 @@ void particle_swarm_eval( 	int dim,
 	double *_h_test =  (double *) malloc(numParticlesPerSwarm * numSwarms*2 * sizeof(double));
 
 	// Create memory for the result
-	double *_h_result = (double *) malloc( (dim + 1) * sizeof(double));
+	double *_h_result = (double *) malloc( numSwarms*(dim + 1) * sizeof(double));
 
 	double * _d_result;
-	cudaMalloc((void **)&_d_result, (dim+1) * sizeof(double));
+	cudaMalloc((void **)&_d_result, numSwarms*(dim+1) * sizeof(double));
 	
 	double *_d_test; 
 	cudaMalloc((void **)&_d_test, numParticlesPerSwarm * 2 * sizeof(double));
-		
+	
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+
+			
 	// Set up the kernel for number generation on each particle
 	setup_kernel<<< numSwarms, numParticlesPerSwarm >>>(time(NULL), _d_state);
-	
+
 	// Call the kernel test
 	printf("Num Swarms = %d; Num Particles = %d\n", numSwarms, numParticlesPerSwarm);
+	cudaEventRecord(start);
 	gpu_particle_swarm_opt<<< numSwarms, numParticlesPerSwarm >>>(	dim,
 																	_d_state, 
 																	pos_lower_bound, pos_upper_bound, 
@@ -556,18 +565,59 @@ void particle_swarm_eval( 	int dim,
 																	_d_result,
 																	_d_test );
 	
+	cudaEventRecord(stop);
+	cudaError_t err = cudaGetLastError();
+	if (err != cudaSuccess)
+		printf("Error: %s\n", cudaGetErrorString(err));
+
 	// Copy the result
-	cudaMemcpy( _h_result, _d_result, (dim + 1) * sizeof(double), cudaMemcpyDeviceToHost );
+	cudaMemcpy( _h_result, _d_result, numSwarms*(dim + 1) * sizeof(double), cudaMemcpyDeviceToHost );
 	
 	// Copy the test
 	cudaMemcpy( _h_test, _d_test, (numParticlesPerSwarm*numSwarms*2 * sizeof(double)), cudaMemcpyDeviceToHost );
+
+	cudaEventSynchronize(stop);
+	float msec = 0;
+	cudaEventElapsedTime(&msec, start, stop);
 	
-	printf("Result Score: %1.10f\n", _h_result[0]);
-	for (int i = 0; i<dim; i++)
+	printf("Kernel Time %1.10f (msec)\n", msec);
+
+	int best_idx;
+	double this_result;
+	result_score = INFINITY;
+
+	for (int iSwarm = 0; iSwarm < numSwarms; iSwarm++)
 	{
-		printf("%1.10f ", _h_result[i+1]);
+		this_result = _h_result[iSwarm*(dim+1)];
+		
+		if (this_result < result_score)
+		{
+			result_score = this_result;
+			best_idx = iSwarm;
+		}
+
+		printf("Result Score: %1.10f\n", this_result);
+		for (int i = 0; i<dim; i++)
+		{
+			printf("%1.10f ", _h_result[iSwarm*(dim+1)+i+1]);
+		}
+		printf("\n\n");
 	}
-	printf("\n");
+
+	for (int i = 0; i < dim; i++)
+	{
+		result_vec[i] = _h_result[best_idx*(dim+1)+i+1];
+	}
+	
+	printf("The Best Swarm Idx is %d\n\n", best_idx);
+	printf("The Best Swarm Score is %1.10f\n", result_score);
+	printf("Best Pos = ("); 
+
+	for (int i = 0; i < (dim-1); i++)
+	{
+		printf("%1.10f, ", result_vec[i]);
+	}
+	printf("%1.10f)\n\n", result_vec[dim-1]);
 		
 	cudaFree(_d_state);
 	cudaFree(_d_test);
