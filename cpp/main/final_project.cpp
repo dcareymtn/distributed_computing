@@ -1,6 +1,7 @@
 #include <omp.h>
 #include <iostream>
 #include <stdio>
+#include <math.h>
 
 #include "matrix.hpp"
 #include "math_eval.hpp"
@@ -37,16 +38,16 @@ int main()
 	double (*g)(int, double*);
 
 	int dim = 2;
-	//g = &sum_of_the_squares;
-	g = &rastrigin;
+	g = &sum_of_the_squares;
+	//g = &rastrigin;
 	int numParticles = 32;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
-	double max_vel = 0.1;
-	int max_iter 	= 50;
-	int numSwarms  = 1;
+	double max_vel = 10000;
+	int max_iter 	= 1000;
+	int numSwarms  = 20;
 	int numParticlesPerSwarm = numParticles;
 	double score1, score2;
 	double x_hat1[10], x_hat2[10];
@@ -54,37 +55,88 @@ int main()
 
 	gpu::cuda_init();
 	
-	start_s = omp_get_wtime();
-	gpu::particle_swarm_eval( 	dim, 
-								numSwarms, 
-								numParticlesPerSwarm,
+//	start_s = omp_get_wtime();
+//	gpu::particle_swarm_eval( 	dim, 
+//								numSwarms, 
+//								numParticlesPerSwarm,
+//								pos_lower_bound,
+//								pos_upper_bound,
+//								a_1, a_2,
+//								max_vel,
+//								max_iter, 
+//								score1,
+//								&x_hat1[0],
+//								false);
+//
+//	stop_s = omp_get_wtime();
+//	printf("GPU Time: %1.10f\n", stop_s - start_s);
+//
+//	start_s = omp_get_wtime();
+//	particle_swarm_eval( 	g, 
+//							dim, 
+//							numSwarms * numParticles, 
+//							pos_lower_bound,
+//							pos_upper_bound,
+//							a_1, a_2,
+//							max_vel,
+//							max_iter, 
+//							score1,
+//							&x_hat1[0], 
+//							false,
+//							false);// Writing results 
+//	stop_s = omp_get_wtime();
+//	printf("Serial Time: %1.10f\n", stop_s - start_s);
+
+	// Design experiment
+	int numFactors = 7;
+	double gpu_time, cpu_time;
+	int tSwarmSize;
+
+	printf("%-20s%-20s%-20s%-20s%-20s%-20s\n", "Swarm Size", "Num Particles", "CPU Time", "GPU Time", "CPU Score", "GPU Score");
+	for (int iFac = 0; iFac < numFactors; iFac++)
+	{
+		
+		// Experiment swarm size
+		tSwarmSize 	= pow(2, iFac);
+
+		// Evaluate the cpu
+		start_s = omp_get_wtime();
+		particle_swarm_eval( 	g, 
+								dim, 
+								numParticlesPerSwarm, 
 								pos_lower_bound,
 								pos_upper_bound,
 								a_1, a_2,
 								max_vel,
 								max_iter, 
 								score1,
-								&x_hat1[0],
-								false);
+								&x_hat1[0], 
+								false,
+								false);// Writing results 
+		stop_s = omp_get_wtime();
+		cpu_time = stop_s - start_s;
 
-	stop_s = omp_get_wtime();
-	printf("GPU Time: %1.10f\n", stop_s - start_s);
+		// Evaluate the gpu
+		start_s = omp_get_wtime();
+		gpu::particle_swarm_eval( 	dim, 
+									tSwarmSize, 
+									numParticlesPerSwarm,
+									pos_lower_bound,
+									pos_upper_bound,
+									a_1, a_2,
+									max_vel,
+									max_iter, 
+									score2,
+									&x_hat2[0],
+									true,
+									false);
 
-	start_s = omp_get_wtime();
-	particle_swarm_eval( 	g, 
-							dim, 
-							numSwarms * numParticles, 
-							pos_lower_bound,
-							pos_upper_bound,
-							a_1, a_2,
-							max_vel,
-							max_iter, 
-							score1,
-							&x_hat1[0], 
-							false,
-							true);// Writing results 
-	stop_s = omp_get_wtime();
-	printf("Serial Time: %1.10f\n", stop_s - start_s);
+		stop_s = omp_get_wtime();
+		gpu_time = stop_s - start_s;
+
+		printf("%-20d%-20d%-20f%-20f%-20.10f%-20.10f\n", tSwarmSize, numParticlesPerSwarm, cpu_time, gpu_time, score1, score2);
+		
+	}
 	
 	return 0;
 }

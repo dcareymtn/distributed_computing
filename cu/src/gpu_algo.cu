@@ -526,7 +526,8 @@ void particle_swarm_eval( 	int dim,
 							int iterations,
 							double &result_score,
 							double *result_vec, 
-							bool bHighIsGood )
+							bool bHighIsGood,
+							bool bWriteResults )
 {
 
 	// Create the random state for random number generation on each thread (global)
@@ -554,7 +555,6 @@ void particle_swarm_eval( 	int dim,
 	setup_kernel<<< numSwarms, numParticlesPerSwarm >>>(time(NULL), _d_state);
 
 	// Call the kernel test
-	printf("Num Swarms = %d; Num Particles = %d\n", numSwarms, numParticlesPerSwarm);
 	cudaEventRecord(start);
 	gpu_particle_swarm_opt<<< numSwarms, numParticlesPerSwarm >>>(	dim,
 																	_d_state, 
@@ -567,8 +567,8 @@ void particle_swarm_eval( 	int dim,
 	
 	cudaEventRecord(stop);
 	cudaError_t err = cudaGetLastError();
-	if (err != cudaSuccess)
-		printf("Error: %s\n", cudaGetErrorString(err));
+//	if (err != cudaSuccess)
+//		printf("Error: %s\n", cudaGetErrorString(err));
 
 	// Copy the result
 	cudaMemcpy( _h_result, _d_result, numSwarms*(dim + 1) * sizeof(double), cudaMemcpyDeviceToHost );
@@ -580,8 +580,6 @@ void particle_swarm_eval( 	int dim,
 	float msec = 0;
 	cudaEventElapsedTime(&msec, start, stop);
 	
-	printf("Kernel Time %1.10f (msec)\n", msec);
-
 	int best_idx;
 	double this_result;
 	result_score = INFINITY;
@@ -596,12 +594,16 @@ void particle_swarm_eval( 	int dim,
 			best_idx = iSwarm;
 		}
 
-		printf("Result Score: %1.10f\n", this_result);
-		for (int i = 0; i<dim; i++)
+		if (bWriteResults) 
 		{
-			printf("%1.10f ", _h_result[iSwarm*(dim+1)+i+1]);
+			printf("Result Score: %1.10f\n", this_result);
+			for (int i = 0; i<dim; i++)
+			{
+				printf("%1.10f ", _h_result[iSwarm*(dim+1)+i+1]);
+			}
+			printf("\n\n");
 		}
-		printf("\n\n");
+
 	}
 
 	for (int i = 0; i < dim; i++)
@@ -609,16 +611,19 @@ void particle_swarm_eval( 	int dim,
 		result_vec[i] = _h_result[best_idx*(dim+1)+i+1];
 	}
 	
-	printf("The Best Swarm Idx is %d\n\n", best_idx);
-	printf("The Best Swarm Score is %1.10f\n", result_score);
-	printf("Best Pos = ("); 
-
-	for (int i = 0; i < (dim-1); i++)
+	if (bWriteResults)	
 	{
-		printf("%1.10f, ", result_vec[i]);
+		printf("The Best Swarm Idx is %d\n\n", best_idx);
+		printf("The Best Swarm Score is %1.10f\n", result_score);
+		printf("Best Pos = ("); 
+
+		for (int i = 0; i < (dim-1); i++)
+		{
+			printf("%1.10f, ", result_vec[i]);
+		}
+		printf("%1.10f)\n\n", result_vec[dim-1]);
 	}
-	printf("%1.10f)\n\n", result_vec[dim-1]);
-		
+			
 	cudaFree(_d_state);
 	cudaFree(_d_test);
 	cudaFree(_d_result);	

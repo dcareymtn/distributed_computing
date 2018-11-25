@@ -1,12 +1,12 @@
 Sender: LSF System <phpcadmin@gpu55>
-Subject: Job 158599: <final_project> in cluster <phpc_cluster> Done
+Subject: Job 158631: <final_project> in cluster <phpc_cluster> Done
 
 Job <final_project> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
 Job was executed on host(s) <8*gpu55>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Sat Nov 24 21:24:07 2018
-Results reported at Sat Nov 24 21:24:07 2018
+Started at Sat Nov 24 22:31:01 2018
+Results reported at Sat Nov 24 22:31:02 2018
 
 Your job looked like:
 
@@ -33,175 +33,27 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               0.41 sec.
+    CPU time :               0.89 sec.
+    Max Memory :             83 MB
+    Average Memory :         83.00 MB
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
+    Max Swap :               283169 MB
+
+    Max Processes :          4
+    Max Threads :            7
 
 The output (if any) follows:
 
-Num Swarms = 1; Num Particles = 32
-Kernel Time 0.9325760007 (msec)
-Result Score: 0.0008753507
-0.4732346936 0.4873917049 
-
-The Best Swarm Idx is 0
-
-The Best Swarm Score is 0.0008753507
-Best Pos = (0.4732346936, 0.4873917049)
-
-GPU Time: 0.0085259801
-Global Best Position
--2.03655 
--0.18597 
-Global Best Position
-2.05203 
--1.05124 
-Global Best Position
--1.94972 
-0.98559 
-Global Best Position
--1.94972 
-0.98559 
-Global Best Position
--1.94972 
-0.98559 
-Global Best Position
--1.94972 
-0.98559 
-Global Best Position
--1.98748 
-0.07194 
-Global Best Position
--1.98748 
-0.07194 
-Global Best Position
--0.11796 
--0.09538 
-Global Best Position
--0.11796 
--0.09538 
-Global Best Position
--0.11796 
--0.09538 
-Global Best Position
-1.05203 
--0.07202 
-Global Best Position
--0.03980 
--0.98405 
-Global Best Position
--0.03980 
--0.98405 
-Global Best Position
--0.03980 
--0.98405 
-Global Best Position
--0.03980 
--0.98405 
-Global Best Position
--0.03980 
--0.98405 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01107 
--0.95532 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
--0.01654 
--0.96032 
-Global Best Position
-0.02672 
--1.01845 
-Global Best Position
-0.04932 
-0.04794 
-Global Best Position
--0.02474 
--0.05206 
-Global Best Position
--0.02474 
--0.05206 
-Global Best Position
-0.05149 
-0.02189 
-Global Best Position
-0.05149 
-0.02189 
-Global Best Position
-0.00045 
--0.05496 
-Global Best Position
-0.00045 
--0.05496 
-Global Best Position
-0.02932 
--0.01148 
-Global Best Position
-0.02932 
--0.01148 
-Global Best Position
-0.02932 
--0.01148 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Global Best Position
-0.00592 
--0.02422 
-Serial Time: 0.0040817891
+Swarm Size          Num Particles       CPU Time            GPU Time            CPU Score           GPU Score           
+1                   32                  0.002527            0.023833            0.0000324617        0.0001923267        
+2                   32                  0.002550            0.052265            0.0000324617        0.0001923267        
+4                   32                  0.002504            0.051769            0.0000324617        0.0001923267        
+8                   32                  0.002519            0.056812            0.0000324617        0.0001923267        
+16                  32                  0.002559            0.064746            0.0000324617        0.0001923267        
+32                  32                  0.002519            0.063100            0.0000324617        0.0000427890        
+64                  32                  0.002672            0.059909            0.0000324617        0.0000189610        
 
 
 PS:
