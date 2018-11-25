@@ -26,6 +26,7 @@ void particle_swarm_eval( double (*f)(int dim, double * vec),
 							double max_vel, int max_iter, 
 							double &score,
 							double *x_hat, 
-							bool bHighIsGood = false);
+							bool bHighIsGood = false,
+							bool bWriteResults = false);
 
 #endif

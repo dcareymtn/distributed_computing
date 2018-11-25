@@ -269,7 +269,8 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 							int max_iter, 
 							double &score,
 							double *x_hat,
-							bool bHighIsGood)
+							bool bHighIsGood,
+							bool bWriteResults)
 
 {
 	
@@ -294,9 +295,12 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 
 	FILE * fParticles;
 	FILE * fScore;
-	
-	fParticles 	= fopen( "particles.csv", "w");
-	fScore 		= fopen( "score.csv", "w");
+
+	if (bWriteResults)
+	{
+		fParticles 	= fopen( "particles.csv", "w");
+		fScore 		= fopen( "score.csv", "w");
+	}
 	
 	// Initialize scoreing
 		for (int iParticle = 0; iParticle < numParticles; iParticle++)
@@ -337,15 +341,17 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 			}
 
 //			printf("Current Position\n");	
-//			printMatrix( stdout, numParticles, dim, c_pos, true );
-//			printMatrix( fParticles, numParticles, dim, c_pos, true );
+//			printMatrix( stdout, numParticles, dim, c_pos, true );i
+			if (bWriteResults)
+				printMatrix( fParticles, numParticles, dim, c_pos, true );
 //			printf("Current Velocity\n"    );
 //			printMatrix( stdout, numParticles, dim, c_vel, true );
 //			printf("Personal Best Position\n"    );
 //			printMatrix( stdout, numParticles, dim, pb_pos, true );
 //			printf("Personal Best Score\n");
 //			printMatrix( stdout, 1, numParticles, pb_score );
-//			printMatrix( fParticles, 1, numParticles, pb_score );
+			if (bWriteResults)
+				printMatrix( fParticles, 1, numParticles, pb_score );
 			
 			// Of all the particles, do a maximum reduction on global data to find the global max
 			for (int iParticle = 0; iParticle < numParticles; iParticle++)
@@ -361,7 +367,8 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 			}
 
 //			fprintf( stdout, "global score = %f\n", gb_score);
-//			fprintf( fScore, "%f\n");
+			if (bWriteResults)
+				fprintf( fScore, "%f\n");
 //			printf("Global Best Position\n");
 //			printMatrix( stdout, dim, 1, gb_pos );	
 

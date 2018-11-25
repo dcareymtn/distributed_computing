@@ -37,16 +37,16 @@ int main()
 	double (*g)(int, double*);
 
 	int dim = 3;
-	g = &sum_of_the_squares;
-	//g = &rastrigin;
-	int numParticles = 128;
+	//g = &sum_of_the_squares;
+	g = &rastrigin;
+	int numParticles = 32;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
 	double max_vel = 10000000000;
-	int max_iter 	= 1000;
-	int numSwarms  = 400;
+	int max_iter 	= 50;
+	int numSwarms  = 1;
 	int numParticlesPerSwarm = numParticles;
 	double score1, score2;
 	double x_hat1[10], x_hat2[10];
@@ -81,7 +81,8 @@ int main()
 							max_iter, 
 							score1,
 							&x_hat1[0], 
-							false); 
+							false,
+							true);// Writing results 
 	stop_s = omp_get_wtime();
 	printf("Serial Time: %1.10f\n", stop_s - start_s);
 	
