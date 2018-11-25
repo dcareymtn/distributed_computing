@@ -368,9 +368,11 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 
 //			fprintf( stdout, "global score = %f\n", gb_score);
 			if (bWriteResults)
-				fprintf( fScore, "%f\n");
-//			printf("Global Best Position\n");
-//			printMatrix( stdout, dim, 1, gb_pos );	
+			{
+				fprintf( fScore, "%f\n", gb_score);
+				printf("Global Best Position\n");
+				printMatrix( stdout, dim, 1, gb_pos );	
+			}
 
 			// Randomly generate the two random vectors [0,1]
 			// Move the particles and update the positions	

@@ -36,7 +36,7 @@ int main()
 
 	double (*g)(int, double*);
 
-	int dim = 3;
+	int dim = 2;
 	//g = &sum_of_the_squares;
 	g = &rastrigin;
 	int numParticles = 32;
@@ -44,7 +44,7 @@ int main()
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
 	double a_2 = 1.0;
-	double max_vel = 10000000000;
+	double max_vel = 0.1;
 	int max_iter 	= 50;
 	int numSwarms  = 1;
 	int numParticlesPerSwarm = numParticles;
