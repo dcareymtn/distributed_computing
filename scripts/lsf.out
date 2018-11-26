@@ -1,12 +1,12 @@
-Sender: LSF System <phpcadmin@gpu55>
-Subject: Job 158631: <final_project> in cluster <phpc_cluster> Done
+Sender: LSF System <phpcadmin@gpu61>
+Subject: Job 158707: <final_project> in cluster <phpc_cluster> Done
 
 Job <final_project> was submitted from host <elgato-login.hpc.arizona.edu> by user <dcareymtn> in cluster <phpc_cluster>.
-Job was executed on host(s) <8*gpu55>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
+Job was executed on host(s) <8*gpu61>, in queue <windfall>, as user <dcareymtn> in cluster <phpc_cluster>.
 </home/u18/dcareymtn> was used as the home directory.
 </home/u18/dcareymtn/workspace/distributed_computing> was used as the working directory.
-Started at Sat Nov 24 22:31:01 2018
-Results reported at Sat Nov 24 22:31:02 2018
+Started at Sun Nov 25 19:28:24 2018
+Results reported at Sun Nov 25 19:28:27 2018
 
 Your job looked like:
 
@@ -33,9 +33,9 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :               0.89 sec.
-    Max Memory :             83 MB
-    Average Memory :         83.00 MB
+    CPU time :               2.83 sec.
+    Max Memory :             84 MB
+    Average Memory :         84.00 MB
     Total Requested Memory : -
     Delta Memory :           -
     (Delta: the difference between total requested memory and actual max usage.)
@@ -46,14 +46,8 @@ Resource usage summary:
 
 The output (if any) follows:
 
-Swarm Size          Num Particles       CPU Time            GPU Time            CPU Score           GPU Score           
-1                   32                  0.002527            0.023833            0.0000324617        0.0001923267        
-2                   32                  0.002550            0.052265            0.0000324617        0.0001923267        
-4                   32                  0.002504            0.051769            0.0000324617        0.0001923267        
-8                   32                  0.002519            0.056812            0.0000324617        0.0001923267        
-16                  32                  0.002559            0.064746            0.0000324617        0.0001923267        
-32                  32                  0.002519            0.063100            0.0000324617        0.0000427890        
-64                  32                  0.002672            0.059909            0.0000324617        0.0000189610        
+Num Swarms          Num Particles       CPU Time            GPU Time            CPU Score           GPU Score           CPU (x)             CPU (y)             GPU (x)             GPU (y)             
+1                   32                  0.005232            0.019297            0.4775469847        0.4997075865        0.0142964343        0.0158014770        -0.0469188069       -0.9605193139       
 
 
 PS:

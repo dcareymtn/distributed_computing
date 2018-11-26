@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <cuda.h>
 #include <time.h>
+#include <math.h>
 
 #include "curand.h"
 #include "curand_kernel.h"
@@ -26,6 +27,19 @@ __device__ double gpu_sum_of_the_squares( int dim, double * vec)
 	}
 	
 	return res;
+}
+
+__device__ double gpu_rastrigin( int dim, double * vec)
+{
+	double res = 10 * dim;
+
+	for (int i = 0; i < dim; i++)
+	{
+		res += vec[i]*vec[i] - 10 * cos( 2 * M_PI * vec[i] );
+	}
+
+	return res;
+
 }
 
 __global__ void setup_kernel( unsigned long seed, curandState *state )
@@ -307,7 +321,8 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 		thread_map 		= hash[threadIdx.x];
 		
 		// Get the score of the current particle and was it a personal best
-		current_score 	= gpu_sum_of_the_squares( dim, &pCurPos[thread_map*dim]);
+//		current_score 	= gpu_sum_of_the_squares( dim, &pCurPos[thread_map*dim]);
+		current_score 	= gpu_rastrigin( dim, &pCurPos[thread_map*dim] );
 		
 		if (current_score < pPbScore[thread_map])
 		{
@@ -348,11 +363,9 @@ __global__ void gpu_particle_swarm_opt( const int dim,
 
 			idx 	= smem_int[threadIdx.x] * dim + iDim;
 			
-			pCurVel[idx] = pCurVel[idx] + a_1 * r_1 * pPbPos[idx] - pCurPos[idx] + a_2 * r_2 * (pGbPos[iDim] - pCurPos[idx]);
-			//pCurVel[idx] = pCurVel[idx] * (fabs(pCurVel[idx]) > max_vel ? max_vel/fabs(pCurVel[idx]) : 1);
-			pCurVel[idx] = pCurVel[idx] * (1);
+			pCurVel[idx] = pCurVel[idx] + a_1 * r_1 * (pPbPos[idx] - pCurPos[idx]) + a_2 * r_2 * (pGbPos[iDim] - pCurPos[idx]);
+			pCurVel[idx] = pCurVel[idx] * (fabs(pCurVel[idx]) > max_vel ? max_vel/fabs(pCurVel[idx]) : 1);
 			pCurPos[idx] = pCurPos[idx] + pCurVel[idx];
-			
 		}
 		
 		__syncthreads();
@@ -552,7 +565,7 @@ void particle_swarm_eval( 	int dim,
 
 			
 	// Set up the kernel for number generation on each particle
-	setup_kernel<<< numSwarms, numParticlesPerSwarm >>>(time(NULL), _d_state);
+	setup_kernel<<< numSwarms, numParticlesPerSwarm >>>((unsigned long long)clock(), _d_state);
 
 	// Call the kernel test
 	cudaEventRecord(start);

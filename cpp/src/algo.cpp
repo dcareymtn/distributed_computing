@@ -274,7 +274,6 @@ void particle_swarm_eval( 	double (*f)(int dim, double * vec),
 
 {
 	
-	srand(time(NULL));
 
 	double score_best 	= INFINITY;
 
