@@ -40,7 +40,7 @@ int main()
 	int dim = 2;
 	//g = &sum_of_the_squares;
 	g = &rastrigin;
-	int numParticles = 32;
+	int numParticles = 64;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
@@ -90,19 +90,29 @@ int main()
 	// Design experiment
 	double gpu_time, cpu_time;
 	int tSwarmSize;
-	int startFac = 0;
-	int numFactors = 0;
+	int startFac = 5;
+	int numFactors = 5;
 	int nMC = 100;
 	double score1MC(0), score2MC(0);
+	double time1MC(0), time2MC(0);
+	double miss1MC(0), miss2MC(0);
 
 	srand(1000*time(NULL));
 
-	printf("%-20s%-20s%-20s%-20s%-20s%-20s%-20s%-20s%-20s%-20s\n", "Num Swarms", "Num Particles", "CPU Time", "GPU Time", "CPU Score", "GPU Score", "CPU (x)", "CPU (y)", "GPU (x)", "GPU (y)");
+	printf("%-20s%-20s%-20s%-20s%-20s%-20s%-20s%-20s\n", "Num Swarms", "Num Particles", "CPU Time", "GPU Time", "CPU Score", "GPU Score" , "CPU Miss", "GPU Miss");
 	for (int iFac = startFac; iFac <= numFactors; iFac++)
 	{
 		
 		// Experiment swarm size
 		tSwarmSize 	= pow(2, iFac);
+
+		// Reinitialize
+		score1MC 	= 0;
+		score2MC 	= 0;
+		time1MC 	= 0;
+		time2MC 	= 0;
+		miss1MC 	= 0;
+		miss2MC 	= 0;
 
 		for (int iMC = 0; iMC < nMC; iMC++)
 		{
@@ -143,11 +153,17 @@ int main()
 			
 			score1MC += score1;
 			score2MC += score2;
+			time1MC += cpu_time;
+			time2MC += gpu_time;
+
+			miss1MC += sqrt(x_hat1[0]*x_hat1[0] + x_hat1[1]*x_hat1[1]);
+			miss2MC += sqrt(x_hat2[0]*x_hat2[0] + x_hat2[1]*x_hat2[1]);
+
 //			printf("score1 = %-20.10fscore2 = %-20.10f\n", score1, score2);
 
 		}
 
-		printf("%-20d%-20d%-20f%-20f%-20.10f%-20.10f%-20.10f%-20.10f%-20.10f%-20.10f\n", tSwarmSize, numParticlesPerSwarm, cpu_time, gpu_time, score1MC/nMC, score2MC/nMC, x_hat1[0], x_hat1[1], x_hat2[0], x_hat2[1]);
+		printf("%-20d%-20d%-20f%-20f%-20.10f%-20.10f%-20.10f%-20.10f\n", tSwarmSize, numParticlesPerSwarm,time1MC/nMC, time2MC/nMC, score1MC/nMC, score2MC/nMC, miss1MC/nMC, miss2MC/nMC );
 		
 	}
 	

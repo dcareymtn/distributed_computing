@@ -1,4 +1,5 @@
+/home/u18/dcareymtn/.lsbatch/1543210019.158736.shell: line 12:  1496 Segmentation fault      (core dumped) ~/workspace/distributed_computing/build/bin/final_project
 
-real	0m2.806s
-user	0m1.955s
-sys	0m0.804s
+real	0m20.533s
+user	0m19.437s
+sys	0m0.683s
