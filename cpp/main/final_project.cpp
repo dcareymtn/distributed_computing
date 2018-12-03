@@ -40,7 +40,7 @@ int main()
 	int dim = 2;
 	//g = &sum_of_the_squares;
 	g = &rastrigin;
-	int numParticles = 64;
+	int numParticles = 32;
 	double pos_lower_bound = -opt_limit;
 	double pos_upper_bound = opt_limit;
 	double a_1 = 0.2;
@@ -88,6 +88,7 @@ int main()
 //	printf("Serial Time: %1.10f\n", stop_s - start_s);
 
 	// Design experiment
+	dim = 2;
 	double gpu_time, cpu_time;
 	int tSwarmSize;
 	int startFac = 5;
